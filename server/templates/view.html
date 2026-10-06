@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a0b2e">
+  <title>{{ page_title }}</title>
+  <meta name="description" content="{{ og_desc }}">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="{{ og_title }}">
+  <meta property="og:description" content="{{ og_desc }}">
+  <meta property="og:image" content="{{ og_image }}">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:url" content="{{ og_url }}">
+  <meta name="twitter:card" content="summary_large_image">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/wish/wish.css?v=9">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+    }
+  }
+  </script>
+</head>
+<body class="kind-{{ kind }}" data-kind="{{ kind }}" data-evt="/e/" data-create="/create/" data-react="/r/">
+  <video id="cam" playsinline muted autoplay></video>
+  <div id="stage"></div>
+  <div id="flash" class="flash"></div>
+
+  <a id="brand" class="brand" href="/create/">✨ Make your own AR wish</a>
+  <button id="mute" class="icon-btn" aria-label="Sound on/off" hidden>🔊</button>
+
+  <!-- Camera / capture tools -->
+  <nav id="tools" class="tools" hidden>
+    <button class="tool" data-mode="room" aria-label="See it in my room"><span>📷</span>Room</button>
+    <button class="tool" data-mode="selfie" aria-label="Selfie with it"><span>🤳</span>Selfie</button>
+    <button class="tool" data-mode="3d" aria-label="3D view"><span>🧊</span>3D</button>
+    <button class="tool" id="recenter" aria-label="Re-center" hidden><span>🎯</span>Center</button>
+    <button class="tool snap" id="snapBtn" aria-label="Take photo"><span>📸</span>Photo</button>
+    <button class="tool rec" id="recBtn" aria-label="Record video"><span>🎥</span><b id="recLabel">Video</b></button>
+  </nav>
+  <p id="arTip" class="ar-tip" hidden></p>
+
+  <!-- 1. Gift intro -->
+  <section id="intro" class="overlay">
+    <div class="gift" id="introEmoji" aria-hidden="true">🎁</div>
+    <h1 id="introTitle">Someone special sent you a surprise!</h1>
+    <p class="sub" id="introSub">Turn your sound on 🔊</p>
+    <button id="openBtn" class="big-btn">Open my gift ✨</button>
+    <p class="cam-note">📷 Allow the camera to see it appear in your room</p>
+  </section>
+
+  <!-- 2. Lyrics / hints -->
+  <div id="lyric" class="lyric" aria-live="polite"></div>
+  <div id="hint" class="hint" hidden>
+    <p id="hintText"></p>
+    <div id="meter" class="meter"><i></i></div>
+    <div class="hint-actions">
+      <button id="hintMain" class="big-btn"></button>
+      <button id="hintAlt" class="link-btn" hidden></button>
+    </div>
+  </div>
+
+  <!-- 3. Message card -->
+  <section id="card" class="card" hidden>
+    <button id="cardToggle" class="card-toggle" aria-label="Hide message">✕</button>
+    <button id="cardShow" class="card-mini" aria-label="Show message">💌 Show message</button>
+    <div class="card-body">
+      <p class="card-to" id="cardTo"></p>
+      <p class="card-msg" id="cardMsg"></p>
+      <p class="card-from" id="cardFrom"></p>
+    </div>
+    <div class="react-row" id="reactRow">
+      <span id="reactLabel">React:</span>
+      <button data-x="love" aria-label="Love">❤️</button>
+      <button data-x="hug" aria-label="Hug">🤗</button>
+      <button data-x="kiss" aria-label="Kiss">😘</button>
+      <button data-x="haha" aria-label="Haha">😂</button>
+      <button data-x="wow" aria-label="Wow">😍</button>
+      <button data-x="aww" aria-label="Aww">☺️</button>
+      <button data-x="bff" aria-label="Best friends">🤝</button>
+      <button data-x="gang" aria-label="Best gang">🥳</button>
+      <button data-x="missyou" aria-label="Miss you">🥺</button>
+    </div>
+    <button id="primaryBtn" class="big-btn"></button>
+    <div class="card-row">
+      <button id="selfieBtn" class="pill-btn">🤳 Selfie with it</button>
+      <button id="replayBtn" class="pill-btn">🔁 Replay</button>
+    </div>
+    <a class="make-own-btn" id="makeOwn" href="/create/">✨ Make your own AR wish — it’s free</a>
+  </section>
+
+  <!-- 4. Photo preview -->
+  <section id="shot" class="shot" hidden>
+    <img id="shotImg" alt="Your photo">
+    <video id="shotVid" playsinline controls loop hidden></video>
+    <div class="shot-actions">
+      <button id="shotShare" class="big-btn wa">Share on WhatsApp</button>
+      <div class="card-row">
+        <a id="shotSave" class="pill-btn" download="inixr-wish.jpg">⬇️ Save</a>
+        <button id="shotClose" class="pill-btn">✕ Close</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Quick reaction -->
+  <section id="reactSheet" class="shot" hidden>
+    <div class="react-box">
+      <div class="react-big" id="reactBig">❤️</div>
+      <p class="react-title" id="reactTitle"></p>
+      <input id="reactTo" maxlength="24" placeholder="Their name">
+      <input id="reactFrom" maxlength="24" placeholder="Your name">
+      <input id="reactMsg" maxlength="120" placeholder="Add a sweet note (optional)">
+      <p class="react-err" id="reactErr" role="alert"></p>
+      <button id="reactSend" class="big-btn wa">Send on WhatsApp</button>
+      <button id="reactClose" class="link-btn">Cancel</button>
+    </div>
+  </section>
+
+  <div id="toast" class="toast"></div>
+  <noscript><p class="noscript">Please enable JavaScript to open your gift.</p></noscript>
+  <script type="module" src="/static/wish/wish.js?v=9"></script>
+</body>
+</html>

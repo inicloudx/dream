@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#1a0b2e">
+  <title>Send an AR Birthday Wish 🎂</title>
+  <meta name="description" content="Send a 3D birthday cake your friend can open on WhatsApp — with their name, a song and candles they blow out.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="🎂 Send a magical 3D birthday wish">
+  <meta property="og:description" content="Their name on a 3D cake, a birthday song, and candles they blow out with their breath. Free.">
+  <meta property="og:image" content="{{ og_image }}">
+  <meta property="og:url" content="{{ og_url }}">
+  <link rel="icon" href="/favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/wish/wish.css?v=9">
+  <style>
+    html { overflow-y: auto; height: auto; }
+    body { overflow: visible; height: auto; min-height: 100%; overscroll-behavior: auto; }
+    .wrap { max-width: 460px; margin: 0 auto; padding: max(28px, env(safe-area-inset-top)) 16px 40px; }
+    .hero { text-align: center; margin-bottom: 18px; }
+    .hero .emoji { font-size: 3.4rem; }
+    .hero h1 { margin: 4px 0 4px; font-size: clamp(1.6rem, 7vw, 2.1rem); line-height: 1.15; }
+    .hero p { margin: 0; color: var(--muted); }
+    .panel { background: var(--glass); border: 1px solid var(--glass-line); border-radius: 22px; padding: 18px; backdrop-filter: blur(10px); }
+    label { display: block; font-weight: 700; margin: 12px 0 6px; }
+    label:first-child { margin-top: 0; }
+    input, textarea {
+      width: 100%; font: inherit; font-size: 1.05rem; color: var(--ink);
+      background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-line); border-radius: 14px;
+      padding: 0.7em 0.9em; outline: none;
+    }
+    input:focus, textarea:focus { border-color: var(--accent); }
+    textarea { min-height: 96px; resize: vertical; }
+    .count { text-align: right; font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .chip { background: rgba(255, 255, 255, 0.1); color: var(--ink); border: 1px solid var(--glass-line); border-radius: 999px; padding: 0.35em 0.8em; font-size: 0.85rem; font-weight: 700; }
+    .chip:active { background: rgba(255, 204, 77, 0.3); }
+    .chip.on { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+    .opt { font-weight: 500; color: var(--muted); font-size: 0.85rem; }
+    .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
+    .actions .big-btn { width: 100%; }
+    .kinds { display: flex; gap: 4px; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-line); border-radius: 999px; padding: 4px; margin: 0 auto 14px; max-width: 440px; }
+    .kind { flex: 1; background: none; color: var(--muted); font-weight: 800; font-size: 0.88rem; white-space: nowrap; padding: 0.55em 0; border-radius: 999px; }
+    .kind.active { background: var(--accent); color: var(--accent-ink); }
+    .row { display: flex; gap: 8px; }
+    .row .pill-btn { flex: 1; }
+    .err { color: #ffb4b4; font-weight: 700; margin: 10px 0 0; min-height: 1.2em; }
+    .note { font-size: 0.8rem; color: var(--muted); text-align: center; margin-top: 18px; line-height: 1.4; }
+    .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: #fff; color: #222; font-weight: 700; padding: 0.6em 1.2em; border-radius: 999px; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body data-evt="/e/" data-view="{{ view_url }}" data-thanks="{{ thanks_url }}" data-react="{{ react_url }}" data-award="{{ award_url }}">
+  <main class="wrap">
+    <div class="kinds" role="tablist">
+      <button type="button" class="kind" data-kind="bday" role="tab">🎂 Birthday</button>
+      <button type="button" class="kind" data-kind="ty" role="tab">💖 Thanks</button>
+      <button type="button" class="kind" data-kind="rx" role="tab">💞 Love</button>
+      <button type="button" class="kind" data-kind="aw" role="tab">🏆 Awards</button>
+    </div>
+    <header class="hero">
+      <div class="emoji" id="heroEmoji" aria-hidden="true">🎂</div>
+      <h1 id="heroTitle">Send a 3D birthday wish</h1>
+      <p id="heroSub">Their name on a cake, a birthday song, and candles they blow out for real!</p>
+    </header>
+
+    <form id="form" class="panel" autocomplete="off" novalidate>
+      <label for="to" id="toLabel">Birthday person’s name</label>
+      <input id="to" maxlength="24" placeholder="e.g. Priya / பிரியா" required>
+
+      <label for="from">Your name</label>
+      <input id="from" maxlength="24" placeholder="e.g. Karthik">
+
+      <div id="awExtras" hidden>
+        <label>Which award? 😂</label>
+        <div class="chips" id="awardChips"></div>
+        <div id="customWrap" hidden>
+          <label for="customTitle">Your award title</label>
+          <input id="customTitle" maxlength="28" placeholder="e.g. Biggest Foodie">
+        </div>
+      </div>
+
+      <div id="rxExtras" hidden>
+        <label>Pick a reaction</label>
+        <div class="chips" id="reactChips"></div>
+      </div>
+
+      <div id="tyExtras" hidden>
+        <label>Thank you for…</label>
+        <div class="chips" id="itemChips"></div>
+        <label>They are my… <span class="opt">(optional)</span></label>
+        <div class="chips" id="relChips"></div>
+      </div>
+
+      <label for="msg" id="msgLabel">Your wish</label>
+      <textarea id="msg" maxlength="220" placeholder="Write something from the heart…"></textarea>
+      <div class="count"><span id="count">0</span>/220</div>
+      <div class="chips" id="chips"></div>
+
+      <p class="err" id="err" role="alert"></p>
+
+      <div class="actions">
+        <button type="button" id="waBtn" class="big-btn wa">Send on WhatsApp</button>
+        <div class="row">
+          <button type="button" id="previewBtn" class="pill-btn">👀 Preview</button>
+          <button type="button" id="copyBtn" class="pill-btn">🔗 Copy link</button>
+        </div>
+      </div>
+    </form>
+
+    <p class="note">Free · No app needed · Names and wishes stay inside the link — we don’t store them.<br>Made with ✨ by <a href="https://inixr.com" style="color:inherit">iNiXR</a></p>
+  </main>
+  <div class="toast" id="toast">Link copied!</div>
+  <script src="/static/wish/create.js?v=9"></script>
+</body>
+</html>
