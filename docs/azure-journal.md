@@ -57,8 +57,21 @@ After changing a secret, restart the app to pick it up immediately.
   `LogFiles/StartupLogs/*_failure.log`: "No instrumentation key or connection string was provided".
   Fixed by pasting the real connection string (starts with `InstrumentationKey=`). The code (v2) now only
   logs a warning for a bad monitoring setting instead of stopping the app.
+- **Database password mismatch** ("password authentication failed for user dreamadmin", code 28P01) after the
+  database was recreated. Fixed with one fresh letters-and-digits password: Reset password on the server, new
+  version of the `database-url` secret.
+- **The app kept using the old secret.** App Service caches Key Vault values for up to 24 hours, and a restart
+  alone did not refetch. Changing the setting (to
+  `@Microsoft.KeyVault(SecretUri=https://kv-dream-dev-cin.vault.azure.net/secrets/database-url/)`) forced a
+  fresh fetch. Lesson for secret rotation: new version → refresh apps (Pull reference values or any setting
+  change) → only then retire the old password.
 - **"Tag already exists"** when copying the image: the copy had already worked. Azure refuses to overwrite
   a tag unless told to, which protects released versions.
+
+## Live (7 October 2026)
+
+`https://app-dream-viewer-dev-cin-esh9feezb0aad3gs.centralindia-01.azurewebsites.net` — all gift pages, the
+creator and static files answer 200; `/stats/` asks for the password. Running `viewer:v1`.
 
 ## Troubleshooting a 503
 
