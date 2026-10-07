@@ -10,7 +10,7 @@ import { renderCreate, renderView, VIEW_PATHS } from './pages.js';
 import { renderStats } from './stats.js';
 
 // trustProxy: Azure terminates HTTPS in front of the container and forwards the original scheme and host.
-const app = Fastify({ logger: true, trustProxy: true, ignoreTrailingSlash: true, bodyLimit: 4096 });
+const app = Fastify({ logger: true, trustProxy: true, routerOptions: { ignoreTrailingSlash: true }, bodyLimit: 4096 });
 
 // Name each request by its route ("GET /thanks/") so Application Insights groups them usefully.
 app.addHook('onRequest', async (req) => {
