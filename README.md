@@ -43,7 +43,7 @@ On the Oracle server, export the old events:
 docker compose exec -T web python manage.py dumpdata wish.wishevent > wish_events.json
 ```
 
-Copy `wish_events.json` to this PC, then from the `server` folder (with `DATABASE_URL` set to the
+Copy `wish_events.json` to this PC, then from the `services/viewer` folder (with `DATABASE_URL` set to the
 target database):
 
 ```bash

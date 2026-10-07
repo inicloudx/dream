@@ -1,4 +1,4 @@
-# iNiXR Wish — AR + social platform
+# dream (working name) — AR + social platform
 
 AR gifts and cards shared on WhatsApp. The link opens in the phone browser, the gift appears in the
 room through the camera, and the receiver can react or send something back. This repository replaces
@@ -25,17 +25,28 @@ and is the owner's Azure learning project (goal: Azure Architect / Senior DevOps
 - **Later:** template store, 3D gift catalogue, holograms (parked).
 - Main inixr.com website, Seyalini and Earnly stay on the Oracle server. Do not touch Earnly.
 
+## Architecture
+
+**Separate services, not one integrated app** — read `docs/architecture.md` before adding anything.
+Each service has its own container and its own database; services talk through APIs and events only.
+Planned services: Viewer (exists), Templates, Accounts, Cards, Connections, Feed, Chats, Circles, Media,
+Notifications. Feed/privacy rules (both sides agree before a gift is shared; no children on the public
+feed) are in that document.
+
 ## Layout
 
 | Path | What it is |
 |---|---|
-| `server/src` | Node.js + TypeScript (Fastify): pages, event beacons, stats |
-| `server/templates` | `view.html` (all gift types) and `create.html`, with `{{placeholders}}` |
-| `server/public/wish` | The 3D experience: `wish.js` (three.js), `create.js`, `wish.css`, WhatsApp preview images |
-| `server/scripts/import-events.mjs` | Imports the old Django stats history (`dumpdata` JSON) |
-| `scripts/smoke.mjs` | End-to-end check of a running server |
+| `services/viewer/src` | Viewer service, Node.js + TypeScript (Fastify): gift pages, event beacons, stats |
+| `services/viewer/templates` | `view.html` (all gift types) and `create.html`, with `{{placeholders}}` |
+| `services/viewer/public/wish` | The 3D experience: `wish.js` (three.js), `create.js`, `wish.css`, WhatsApp preview images |
+| `services/viewer/scripts/import-events.mjs` | Imports the old Django stats history (`dumpdata` JSON) |
+| `scripts/smoke.mjs` | End-to-end check of a running viewer |
+| `docs/architecture.md` | Services, rules, build order, Azure resource map |
 
-## Routes
+New services go in `services/<name>/`, each with its own `package.json` and `Dockerfile`.
+
+## Viewer routes
 
 `/` birthday · `/thanks/` · `/r/` reactions · `/award/` · `/create/` · `/e/` event beacon (POST) ·
 `/stats/` (Basic auth, user `admin`, password from `STATS_PASSWORD`) · `/health` · `/static/...`
@@ -45,11 +56,11 @@ and is the owner's Azure learning project (goal: Azure Architect / Senior DevOps
 - Names and messages live only in the link's `#fragment` and are never stored. The server keeps
   anonymous event counts only (`wish_events`), same event names as the old `WishEvent` model.
 - Phones cache static files for 30 days: when `wish.js`, `create.js` or `wish.css` change, bump the
-  `?v=N` in `server/templates/view.html` and `create.html`.
+  `?v=N` in `services/viewer/templates/view.html` and `create.html`.
 - `?me=1` once per phone stops that phone being counted (handled in the browser).
 
 ## Commands
 
 - Run locally: `docker compose up --build -d` → http://localhost:4100 (needs `.env`, see `.env.example`)
-- Unit tests: `npm test` in `server`; type check: `npm run typecheck`
+- Unit tests: `npm test` in `services/viewer`; type check: `npm run typecheck`
 - End-to-end: `node scripts/smoke.mjs http://localhost:4100 <stats password>`
