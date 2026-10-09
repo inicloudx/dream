@@ -1,0 +1,114 @@
+# CI/CD for the viewer service.
+# Every push to main that touches services/viewer:
+#   test → build image → push to crdreamdev → point the web app at the new image → wait until healthy.
+#
+# One pipeline per service: when more services exist, each gets its own file here with its own path filter,
+# so a change to one service never redeploys the others.
+
+name: $(Date:yyyyMMdd)$(Rev:.r)
+
+trigger:
+  branches:
+    include: [main]
+  paths:
+    include: [services/viewer/*, azure-pipelines/viewer.yml, scripts/wait-healthy.mjs]
+
+pr: none
+
+parameters:
+  # true = run on the agent installed on the owner's PC (pool "Default").
+  # false = Microsoft-hosted Linux agents (needs the free hosted-parallelism grant).
+  - name: selfHosted
+    type: boolean
+    default: true
+
+variables:
+  azureServiceConnection: sc-dream-dev # Azure DevOps service connection (workload identity federation)
+  acrName: crdreamdev
+  imageRepo: viewer
+  imageTag: v$(Build.BuildNumber) # e.g. v20261009.1 — every build gets its own tag, so rollback is a tag change
+  resourceGroup: rg-dream-dev-cin
+  webApp: app-dream-viewer-dev-cin
+  healthUrl: https://dream.inixr.com/health
+
+stages:
+  - stage: Build
+    displayName: Test and build image
+    jobs:
+      - job: build
+        pool:
+          ${{ if eq(parameters.selfHosted, true) }}:
+            name: Default
+          ${{ else }}:
+            vmImage: ubuntu-latest
+        steps:
+          - checkout: self
+
+          - script: npm ci
+            displayName: Install dependencies
+            workingDirectory: services/viewer
+
+          - script: npm run typecheck
+            displayName: Type check
+            workingDirectory: services/viewer
+
+          - script: npm test
+            displayName: Unit tests
+            workingDirectory: services/viewer
+
+          - task: AzureCLI@2
+            displayName: Build and push image $(imageRepo):$(imageTag)
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptLocation: inlineScript
+              # Windows batch needs "call" before az (a .cmd), or the script stops after the first line.
+              ${{ if eq(parameters.selfHosted, true) }}:
+                scriptType: batch
+                inlineScript: |
+                  call az acr login --name $(acrName) || exit /b 1
+                  docker build -t $(acrName).azurecr.io/$(imageRepo):$(imageTag) services/viewer || exit /b 1
+                  docker push $(acrName).azurecr.io/$(imageRepo):$(imageTag) || exit /b 1
+              ${{ else }}:
+                scriptType: bash
+                inlineScript: |
+                  set -e
+                  az acr login --name $(acrName)
+                  docker build -t $(acrName).azurecr.io/$(imageRepo):$(imageTag) services/viewer
+                  docker push $(acrName).azurecr.io/$(imageRepo):$(imageTag)
+
+  - stage: Deploy
+    displayName: Deploy to dev
+    dependsOn: Build
+    jobs:
+      # A deployment job records every release against the "dream-dev" environment
+      # (history, and approvals can be added there later without changing this file).
+      - deployment: deploy
+        environment: dream-dev
+        pool:
+          ${{ if eq(parameters.selfHosted, true) }}:
+            name: Default
+          ${{ else }}:
+            vmImage: ubuntu-latest
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: AzureCLI@2
+                  displayName: Point the web app at $(imageRepo):$(imageTag)
+                  inputs:
+                    azureSubscription: $(azureServiceConnection)
+                    ${{ if eq(parameters.selfHosted, true) }}:
+                      scriptType: batch
+                    ${{ else }}:
+                      scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: >-
+                      az webapp sitecontainers update
+                      --name $(webApp) --resource-group $(resourceGroup)
+                      --container-name main
+                      --image $(acrName).azurecr.io/$(imageRepo):$(imageTag)
+
+                - script: node scripts/wait-healthy.mjs $(healthUrl) 300
+                  displayName: Wait until healthy

@@ -64,3 +64,7 @@ New services go in `services/<name>/`, each with its own `package.json` and `Doc
 - Run locally: `docker compose up --build -d` → http://localhost:4100 (needs `.env`, see `.env.example`)
 - Unit tests: `npm test` in `services/viewer`; type check: `npm run typecheck`
 - End-to-end: `node scripts/smoke.mjs http://localhost:4100 <stats password>`
+- CI/CD: `azure-pipelines/viewer.yml` (Azure DevOps). Push to `main` touching `services/viewer` → tests → image
+  `viewer:v<build number>` → `az webapp sitecontainers update` → `scripts/wait-healthy.mjs`. Runs on the self-hosted
+  agent in pool `Default` (owner's PC, Docker Desktop must be running) until the hosted-agent grant arrives; then
+  run with `selfHosted: false`. Service connection: `sc-dream-dev` (workload identity federation).
