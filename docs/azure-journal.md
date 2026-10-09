@@ -90,6 +90,21 @@ First successful run: `viewer:v20261009.2`. Problems on the way: the service con
 group's name instead of `sc-dream-dev`; Docker Desktop was not running on the agent PC (`az acr login` failed with
 exit code 1); a stale agent session after closing the agent window (cleared itself within a minute).
 
+### Who talks to whom, and with which ID
+
+| From → to | Why | Proof of identity |
+|---|---|---|
+| GitHub → Azure DevOps | "Code changed" (webhook) | The GitHub connection |
+| This PC (agent) → Azure DevOps | "Any work for me?", sending logs | Personal access token from `config.cmd` |
+| Agent → GitHub | Download the code (checkout) | Short-lived access given per job |
+| Agent → Azure | Push the image, switch the app's version | Service connection `sc-dream-dev` (federated, no password) |
+| App Service → Container Registry | Pull the image | App's managed identity + AcrPull |
+| App Service → Key Vault | Read secrets | App's managed identity + Key Vault Secrets User |
+| App → PostgreSQL | Data | Password from Key Vault |
+
+The agent only makes **outgoing** connections: it polls Azure DevOps for work ("Listening for Jobs"), so nothing
+connects into the PC and no router setup is needed. Four separate IDs, each opening only its own door.
+
 Lesson: the first health check passed one second after the image switch because the **old** container still
 answered. The image now carries its version (`APP_VERSION`), `/health` reports it, and the pipeline waits for
 the new version — a release only counts when the new version is live.
