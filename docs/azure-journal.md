@@ -73,6 +73,27 @@ After changing a secret, restart the app to pick it up immediately.
 `https://app-dream-viewer-dev-cin-esh9feezb0aad3gs.centralindia-01.azurewebsites.net` — all gift pages, the
 creator and static files answer 200; `/stats/` asks for the password. Running `viewer:v1`.
 
+## Azure DevOps (9 October 2026)
+
+| Piece | What it is | Ours |
+|---|---|---|
+| Organisation | The company in Azure DevOps | `inixr` |
+| Project | One product's workspace | `dream` (Agile process) |
+| Agent | The worker that runs pipeline jobs | Self-hosted: this PC in pool `Default`, started with `run.cmd` |
+| Personal access token | The agent's ID to join the organisation | `agent-pc`, Agent Pools read & manage, 30 days |
+| Service connection | The pipeline's badge into Azure | `sc-dream-dev`, workload identity federation, Contributor on `rg-dream-dev-cin` |
+| GitHub connection | Lets Azure DevOps read the code | Azure Pipelines app (OAuth was also authorised) |
+| Pipeline | The factory line, defined in the repo | `azure-pipelines/viewer.yml` |
+| Environment | Where deploys are recorded; approvals possible | `dream-dev` |
+
+First successful run: `viewer:v20261009.2`. Problems on the way: the service connection got the resource
+group's name instead of `sc-dream-dev`; Docker Desktop was not running on the agent PC (`az acr login` failed with
+exit code 1); a stale agent session after closing the agent window (cleared itself within a minute).
+
+Lesson: the first health check passed one second after the image switch because the **old** container still
+answered. The image now carries its version (`APP_VERSION`), `/health` reports it, and the pipeline waits for
+the new version — a release only counts when the new version is live.
+
 ## Troubleshooting a 503
 
 1. Is the app pulling the right image? Deployment Center → main → image and tag.
