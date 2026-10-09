@@ -42,7 +42,7 @@ app.get('/create/', (req, reply) =>
 
 app.get('/health', async () => {
   await pool.query('SELECT 1');
-  return { ok: true };
+  return { ok: true, version: process.env.APP_VERSION ?? 'dev' };
 });
 
 // Beacons arrive as text/plain (sendBeacon / fetch with a string body) or JSON.

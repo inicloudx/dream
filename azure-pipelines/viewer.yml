@@ -66,14 +66,14 @@ stages:
                 scriptType: batch
                 inlineScript: |
                   call az acr login --name $(acrName) || exit /b 1
-                  docker build -t $(acrName).azurecr.io/$(imageRepo):$(imageTag) services/viewer || exit /b 1
+                  docker build --build-arg APP_VERSION=$(imageTag) -t $(acrName).azurecr.io/$(imageRepo):$(imageTag) services/viewer || exit /b 1
                   docker push $(acrName).azurecr.io/$(imageRepo):$(imageTag) || exit /b 1
               ${{ else }}:
                 scriptType: bash
                 inlineScript: |
                   set -e
                   az acr login --name $(acrName)
-                  docker build -t $(acrName).azurecr.io/$(imageRepo):$(imageTag) services/viewer
+                  docker build --build-arg APP_VERSION=$(imageTag) -t $(acrName).azurecr.io/$(imageRepo):$(imageTag) services/viewer
                   docker push $(acrName).azurecr.io/$(imageRepo):$(imageTag)
 
   - stage: Deploy
@@ -110,5 +110,5 @@ stages:
                       --container-name main
                       --image $(acrName).azurecr.io/$(imageRepo):$(imageTag)
 
-                - script: node scripts/wait-healthy.mjs $(healthUrl) 300
-                  displayName: Wait until healthy
+                - script: node scripts/wait-healthy.mjs $(healthUrl) 600 $(imageTag)
+                  displayName: Wait until the new version is live

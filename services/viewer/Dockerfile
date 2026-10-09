@@ -11,6 +11,9 @@ RUN npm run build
 FROM node:22-alpine
 WORKDIR /app
 ENV NODE_ENV=production
+# The pipeline passes its image tag here, so the running app can say which version it is.
+ARG APP_VERSION=dev
+ENV APP_VERSION=$APP_VERSION
 COPY package*.json ./
 RUN npm ci --omit=dev
 COPY --from=build /app/dist ./dist

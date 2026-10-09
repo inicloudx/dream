@@ -7,7 +7,9 @@ const BASE = process.argv[2] ?? 'http://localhost:4100';
 const STATS_PASSWORD = process.argv[3];
 const step = (text) => console.log(`ok  ${text}`);
 
-assert.deepEqual(await (await fetch(`${BASE}/health`)).json(), { ok: true });
+const health = await (await fetch(`${BASE}/health`)).json();
+assert.equal(health.ok, true);
+assert.equal(typeof health.version, 'string');
 step('health');
 
 const pages = {
