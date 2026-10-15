@@ -1,5 +1,6 @@
-// iNiXR AR Wish — receiver experience (Birthday cake + Thank-you gift).
-// Personal data (names, message) arrives only in the URL #fragment and never reaches the server.
+// iNiXR AR Wish — receiver experience (Pooja altar, Birthday cake, Thank-you gift, reactions, awards).
+// The message arrives only in the URL #fragment and never reaches the server. Short first names may also
+// be in the query (?f=&t=) for the WhatsApp preview; the server neither stores nor logs them.
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
@@ -9,7 +10,7 @@ import { TextGeometry } from 'three/addons/geometries/TextGeometry.js';
 const $ = (id) => document.getElementById(id);
 const EVT_URL = document.body.dataset.evt;
 const CREATE_URL = document.body.dataset.create;
-const PAGE_KIND = ['ty', 'rx', 'aw'].includes(document.body.dataset.kind) ? document.body.dataset.kind : 'bday';
+const PAGE_KIND = ['ty', 'rx', 'aw', 'pj'].includes(document.body.dataset.kind) ? document.body.dataset.kind : 'bday';
 const REACT_URL = document.body.dataset.react;
 const FONT = '"Baloo Thambi 2", system-ui, sans-serif';
 const TEXT_FONT_URL = 'https://cdn.jsdelivr.net/npm/three@0.169.0/examples/fonts/helvetiker_bold.typeface.json';
@@ -45,6 +46,31 @@ const REACTS = {
   bff: { emoji: '🤝', word: 'BEST FRIENDS', verb: 'says you are the best friend ever', glow: 0xff5c9d },
   gang: { emoji: '🥳', word: 'BEST GANG', verb: 'says our gang is the best', glow: 0xffd23f },
   missyou: { emoji: '🥺', word: 'MISS YOU', verb: 'misses you', glow: 0x7ad0ff },
+  // 🪔 Pooja replies — funny asks that make the friend send something back again.
+  sundal: { emoji: '😋', word: 'SUNDAL PLEASE', verb: 'is asking for their sundal share', glow: 0xffb627, face: 'haha',
+    label: 'Ask for your sundal share', note: 'Where’s my sundal share? 😋 Parcel please!' },
+  bikewash: { emoji: '🚿', word: 'WASH MY BIKE', verb: 'wants you to wash their bike next', glow: 0x7ad0ff, face: 'party',
+    label: 'Wash my bike next', note: 'My bike is waiting for the same wash 🚿😂' },
+  laptop: { emoji: '💻', word: 'BLESS MY LAPTOP', verb: 'wants a blessing for their crashing laptop', glow: 0xffd23f, face: 'plead',
+    label: 'Bless my laptop too', note: 'Bless my laptop too 🙏 It crashes every day 💻😭' },
+  pori: { emoji: '🎉', word: 'PORI PARTY', verb: 'wants a pori-kadalai party at your place', glow: 0xffd23f, face: 'party',
+    label: 'Pori-kadalai party?', note: 'Pori-kadalai party at your place, right? 🎉' },
+  sweets: { emoji: '🍬', word: 'SWEETS PLEASE', verb: 'wants the leftover sweets', glow: 0xff8fc0, face: 'plead',
+    label: 'Send the leftover sweets', note: 'Send me the leftover sweets 🍬 I won’t tell anyone 🤫' },
+};
+// 🪔 Pooja: Saraswathi (learning) or Ayudha (work). In Ayudha Pooja the sender's chosen work sits on the altar.
+const POOJA_MODES = {
+  ay: { emoji: '🪔', word: 'AYUDHA', ta: 'ஆயுத பூஜை வாழ்த்துக்கள்', en: 'Ayudha Pooja' },
+  sar: { emoji: '📚', word: 'SARASWATHI', ta: 'சரஸ்வதி பூஜை வாழ்த்துக்கள்', en: 'Saraswathi Pooja' },
+};
+const WORKS = {
+  car: { emoji: '🚗', label: 'your vehicle' },
+  tools: { emoji: '🔧', label: 'your tools' },
+  it: { emoji: '💻', label: 'your laptop' },
+  factory: { emoji: '⚙️', label: 'your machines' },
+  shop: { emoji: '🛒', label: 'your business' },
+  farm: { emoji: '🚜', label: 'your farm' },
+  student: { emoji: '📚', label: 'your studies' },
 };
 // 🏆 Fun awards — the friendly war zone. The trophy holds a funny prop.
 const AWARDS = {
@@ -77,7 +103,7 @@ function readWish() {
     if (!d) return null;
     const o = JSON.parse(b64urlDecode(d));
     const w = {
-      kind: ['ty', 'bday', 'rx', 'aw'].includes(o.k) ? o.k : PAGE_KIND,
+      kind: ['ty', 'bday', 'rx', 'aw', 'pj'].includes(o.k) ? o.k : PAGE_KIND,
       to: clean(o.t, 24),
       from: clean(o.f, 24),
       msg: clean(o.m, 220),
@@ -89,6 +115,8 @@ function readWish() {
       reply: o.y === 1,
       award: AWARDS[o.a] ? o.a : 'custom',
       awardTitle: clean(o.c, 28).toUpperCase().replace(/\s*AWARD$/, ''),
+      pmode: POOJA_MODES[o.s] ? o.s : 'ay',
+      work: WORKS[o.w] ? o.w : 'car',
     };
     return w.to ? w : null;
   } catch {
@@ -98,12 +126,17 @@ function readWish() {
 
 const DEMO_RX = { kind: 'rx', to: 'Friend', from: 'iNiXR', id: '', demo: true, item: 'heart', rel: '', react: 'wow', msg: 'You are amazing! 😍' };
 const DEMO_AW = { kind: 'aw', to: 'Friend', from: 'iNiXR', id: '', demo: true, item: 'heart', rel: '', react: 'love', award: 'liar', awardTitle: '', msg: 'Congratulations on lying for 365 days straight 😂🏆' };
-const W = readWish() || (PAGE_KIND === 'aw' ? DEMO_AW : PAGE_KIND === 'rx' ? DEMO_RX : PAGE_KIND === 'ty'
+const DEMO_PJ = { kind: 'pj', to: 'Friend', from: 'iNiXR', id: '', demo: true, item: 'heart', rel: '', react: 'love', pmode: 'ay', work: 'car', msg: 'ஆயுத பூஜை வாழ்த்துக்கள்! 🙏 Happy Ayudha Pooja!' };
+const W = readWish() || (PAGE_KIND === 'pj' ? DEMO_PJ : PAGE_KIND === 'aw' ? DEMO_AW : PAGE_KIND === 'rx' ? DEMO_RX : PAGE_KIND === 'ty'
   ? { kind: 'ty', to: 'Friend', from: 'iNiXR', id: '', demo: true, item: 'heart', rel: '', msg: 'Thank you for being amazing! 💖' }
   : { kind: 'bday', to: 'Friend', from: 'iNiXR', id: '', demo: true, item: 'heart', rel: '', msg: 'Wishing you a year full of smiles, surprises and magic! 🎉' });
 const IS_TY = W.kind === 'ty';
 const IS_RX = W.kind === 'rx';
 const IS_AW = W.kind === 'aw';
+const IS_PJ = W.kind === 'pj';
+const IS_SAR = IS_PJ && W.pmode === 'sar';
+const PJ = POOJA_MODES[W.pmode || 'ay'];
+const WORK = WORKS[W.work || 'car'];
 const IS_BOX = IS_TY || IS_AW;          // gift-box flow: thank-you + awards
 const AWARD = AWARDS[W.award || 'liar'];
 const AW_TITLE = (W.award === 'custom' ? W.awardTitle : AWARD.title) || 'SUPERSTAR';
@@ -612,6 +645,12 @@ const sfx = {
     const t0 = actx.currentTime;
     for (let i = 0; i < 90; i++) noise(t0 + rand(0, 2.4), 0.05, rand(0.05, 0.16), 'bandpass', rand(1200, 3000), 800);
   },
+  bell(delay = 0) {
+    if (!actx) return;
+    const t = actx.currentTime + delay;
+    [[740, 0.16, 2.8], [1112, 0.08, 2.0], [1490, 0.06, 1.4], [2030, 0.035, 0.9], [2760, 0.02, 0.5]]
+      .forEach(([f, v, d]) => tone(f, t, d, v, 'sine'));
+  },
   shutter() {
     if (!actx) return;
     const t = actx.currentTime;
@@ -642,6 +681,18 @@ const TY_SONG = [
   [['F4', 0.5, 'F2'], ['A4', 0.5], ['C5', 0.5], ['F5', 0.5]],
   [['G4', 0.5, 'G2'], ['B4', 0.5], ['D5', 0.5], ['G5', 0.5]],
   [['E5', 0.5, 'C3'], ['G5', 0.5], ['C6', 2]],
+];
+const PJ_SONG = [
+  [['E5', 0.5, 'C3'], ['G5', 0.5], ['A5', 1]],
+  [['G5', 0.5, 'G2'], ['E5', 0.5], ['D5', 1]],
+  [['C5', 0.5, 'A2'], ['D5', 0.5], ['E5', 0.5], ['G5', 0.5]],
+  [['E5', 1, 'C3'], ['D5', 0.5], ['C5', 1.5]],
+];
+const PJ_LYRICS = [
+  `🪔 ${PJ.ta}`,
+  `Happy ${PJ.en}, ${W.to}! 🙏`,
+  IS_SAR ? 'Wisdom, music and learning 📚🎶' : `${WORK.emoji} Blessings for ${WORK.label}`,
+  W.from ? `— ${W.from}` : '',
 ];
 const AW_LYRICS = ['', '', `Congratulations, ${W.to}! 😂👏`, '', 'Speech! Speech! 🎤', ''];
 const TY_LYRICS = ['', '', `Thank you, ${W.to} 💖`, '', ITEM.label ? `for ${ITEM.label} ${ITEM.emoji}` : '', ''];
@@ -688,12 +739,18 @@ function playSong(song, lyrics, beatSec) {
   });
 }
 
+let lyricGen = 0;
 function showLyric(text) {
   const el = $('lyric');
+  const gen = ++lyricGen;
   el.classList.remove('show');
-  requestAnimationFrame(() => { el.textContent = text; el.classList.add('show'); });
+  requestAnimationFrame(() => {
+    if (gen !== lyricGen) return;                  // hidden or replaced before this frame
+    el.textContent = text;
+    el.classList.add('show');
+  });
 }
-function hideLyric() { $('lyric').classList.remove('show'); }
+function hideLyric() { lyricGen++; $('lyric').classList.remove('show'); }
 
 // ═══════════════════════════════════════════════════════════════
 //  BIRTHDAY CAKE
@@ -1400,7 +1457,7 @@ function tagTexture() {
 }
 
 // Gold 3D title: a word (THANK YOU / LOVE YOU / …) with the receiver's name under it.
-function buildTitle(word, y, sub = '') {
+function buildTitle(word, y, sub = '', maxW = 2.0) {
   const textGroup = new THREE.Group();
   textGroup.position.set(0, y, 0);
   textGroup.scale.setScalar(0.0001);
@@ -1436,7 +1493,7 @@ function buildTitle(word, y, sub = '') {
     textGroup.add(m);
   };
   new FontLoader().loadAsync(TEXT_FONT_URL).then((font) => {
-    text3d(font, word, 0.25, sub ? 0.44 : 0.2, 2.0);
+    text3d(font, word, 0.25, sub ? 0.44 : 0.2, maxW);
     if (sub) text3d(font, sub, 0.15, 0.17, 1.2);
     if (latinName) text3d(font, W.to, 0.22, -0.18, 1.9);
     else nameSign();
@@ -1559,6 +1616,688 @@ async function openGift() {
   await wait(4500);
   $('hint').hidden = true;
   showCard();
+}
+
+
+// ═══════════════════════════════════════════════════════════════
+//  POOJA — kolam, manai, banana leaf with pori-kadalai, sugarcane,
+//  brass lamp, marigold garlands and the blessed item in the centre
+// ═══════════════════════════════════════════════════════════════
+const pj = {
+  flames: [], lampLight: null, lightK: 0, garlands: [], tilaks: [], gears: [],
+  bubbles: null, washing: false, washT: 0, bubbleFade: 0,
+  petals: null, petalData: [], title: null, titleY: 2.6, lit: false,
+};
+
+// Sandal paste with a kumkum dot. Starts invisible and appears when the altar is blessed.
+function tilak(parent, x, y, z, ry = 0, s = 1) {
+  const g = new THREE.Group();
+  g.add(new THREE.Mesh(new THREE.CircleGeometry(0.035 * s, 20), std(0xf3d9a4, 0.85)));
+  const kum = new THREE.Mesh(new THREE.CircleGeometry(0.015 * s, 16), std(0xc4001d, 0.6));
+  kum.position.z = 0.002;
+  g.add(kum);
+  g.position.set(x, y, z);
+  g.rotation.y = ry;
+  g.scale.setScalar(0.0001);
+  parent.add(g);
+  pj.tilaks.push(g);
+  return g;
+}
+
+// Marigold string hanging in a gentle curve. Also starts invisible.
+function garland(parent, width, sag, y, z) {
+  const n = Math.max(18, Math.round(width * 70));
+  const im = new THREE.InstancedMesh(new THREE.SphereGeometry(0.028, 8, 6), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.85 }), n);
+  const d = new THREE.Object3D();
+  const cols = [0xff8c00, 0xffc107, 0xff8c00, 0xff5722];
+  for (let i = 0; i < n; i++) {
+    const u = i / (n - 1);
+    d.position.set((u - 0.5) * width, -sag * (1 - (2 * u - 1) ** 2), 0);
+    d.scale.setScalar(rand(0.85, 1.2));
+    d.updateMatrix();
+    im.setMatrixAt(i, d.matrix);
+    im.setColorAt(i, new THREE.Color(cols[i % cols.length]));
+  }
+  const g = new THREE.Group();
+  g.add(im);
+  g.position.set(0, y, z);
+  g.scale.setScalar(0.0001);
+  parent.add(g);
+  pj.garlands.push(g);
+  return g;
+}
+
+function kolamTexture() {
+  const [c, ctx] = canvas(1024, 1024);
+  ctx.translate(512, 512);
+  const cols = ['#ff7a1a', '#e6007e', '#ffd400', '#2bb24c'];
+  for (let ring = 0; ring < 3; ring++) {
+    const n = 8 + ring * 8, r = 150 + ring * 110;
+    for (let i = 0; i < n; i++) {
+      ctx.save();
+      ctx.rotate((i / n) * Math.PI * 2);
+      ctx.fillStyle = cols[(i + ring) % cols.length];
+      ctx.globalAlpha = 0.85;
+      ctx.beginPath();
+      ctx.ellipse(r, 0, 46 - ring * 6, 18, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+  }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 9;
+  for (const r of [110, 230, 340, 455]) { ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.stroke(); }
+  ctx.fillStyle = '#ffffff';
+  for (let ring = 0; ring < 4; ring++) {
+    const n = 12 + ring * 8, r = 80 + ring * 122;
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2;
+      ctx.beginPath();
+      ctx.arc(Math.cos(a) * r, Math.sin(a) * r, 9, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+  return toTexture(c);
+}
+
+function leafTexture() {
+  const [c, ctx] = canvas(512, 256);
+  ctx.save();
+  ctx.beginPath();
+  ctx.ellipse(256, 128, 250, 118, 0, 0, Math.PI * 2);
+  ctx.clip();
+  const g = ctx.createLinearGradient(0, 0, 0, 256);
+  g.addColorStop(0, '#2e7d32');
+  g.addColorStop(0.5, '#66bb3a');
+  g.addColorStop(1, '#2e7d32');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 512, 256);
+  ctx.strokeStyle = 'rgba(225,255,205,0.55)';
+  ctx.lineWidth = 6;
+  ctx.beginPath(); ctx.moveTo(0, 128); ctx.lineTo(512, 128); ctx.stroke();
+  ctx.lineWidth = 2;
+  for (let x = 20; x < 500; x += 16) {
+    ctx.beginPath();
+    ctx.moveTo(x, 128); ctx.lineTo(x + 26, 0);
+    ctx.moveTo(x, 128); ctx.lineTo(x + 26, 256);
+    ctx.stroke();
+  }
+  ctx.restore();
+  return toTexture(c);
+}
+
+// Front of the manai: turmeric bands, kumkum dots and the greeting in Tamil.
+function manaiTexture() {
+  const [c, ctx] = canvas(1024, 80);
+  ctx.fillStyle = '#7a4a1e';
+  ctx.fillRect(0, 0, 1024, 80);
+  ctx.fillStyle = '#f7c815';
+  ctx.fillRect(0, 0, 1024, 10);
+  ctx.fillRect(0, 70, 1024, 10);
+  ctx.fillStyle = '#c4001d';
+  for (const x of [40, 90, 934, 984]) { ctx.beginPath(); ctx.arc(x, 40, 10, 0, Math.PI * 2); ctx.fill(); }
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  fitFont(ctx, PJ.ta, 800, 50, 760);
+  ctx.fillStyle = '#ffe9a8';
+  ctx.fillText(PJ.ta, 512, 43);
+  return toTexture(c);
+}
+
+function screenTexture(lines) {
+  const [c, ctx] = canvas(512, 320);
+  const g = ctx.createLinearGradient(0, 0, 0, 320);
+  g.addColorStop(0, '#0d47a1');
+  g.addColorStop(1, '#311b92');
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, 512, 320);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffffff';
+  lines.forEach((line, i) => {
+    fitFont(ctx, line, 800, i ? 40 : 52, 470);
+    ctx.fillText(line, 256, 120 + i * 80);
+  });
+  return toTexture(c);
+}
+
+function keyboardTexture() {
+  const [c, ctx] = canvas(256, 112);
+  ctx.fillStyle = '#2f3338';
+  ctx.fillRect(0, 0, 256, 112);
+  ctx.fillStyle = '#4b5158';
+  for (let r = 0; r < 4; r++) for (let k = 0; k < 12; k++) ctx.fillRect(8 + k * 20.3, 8 + r * 20, 16, 15);
+  ctx.fillRect(70, 90, 116, 15);
+  return toTexture(c);
+}
+
+function wheel(r, w, tyreCol = 0x1b1b1b, rimCol = 0xcfd8dc) {
+  const g = new THREE.Group();
+  const tyre = mesh(new THREE.CylinderGeometry(r, r, w, 22), std(tyreCol, 0.85));
+  const rim = mesh(new THREE.CylinderGeometry(r * 0.55, r * 0.55, w * 1.04, 18), std(rimCol, 0.3, { metalness: 0.8 }));
+  g.add(tyre, rim);
+  g.rotation.x = Math.PI / 2;
+  return g;
+}
+
+function gearGeometry(r, teeth, depth) {
+  const shape = new THREE.Shape();
+  const ri = r * 0.82, step = (Math.PI * 2) / teeth;
+  for (let i = 0; i < teeth; i++) {
+    const a = i * step;
+    [[ri, a], [r, a + step * 0.15], [r, a + step * 0.45], [ri, a + step * 0.6]].forEach(([rr, aa], j) => {
+      const x = Math.cos(aa) * rr, y = Math.sin(aa) * rr;
+      if (i === 0 && j === 0) shape.moveTo(x, y); else shape.lineTo(x, y);
+    });
+  }
+  shape.closePath();
+  const hole = new THREE.Path();
+  hole.absarc(0, 0, r * 0.25, 0, Math.PI * 2, true);
+  shape.holes.push(hole);
+  const geo = new THREE.ExtrudeGeometry(shape, { depth, bevelEnabled: true, bevelThickness: depth * 0.15, bevelSize: depth * 0.12, bevelSegments: 2, curveSegments: 14 });
+  geo.translate(0, 0, -depth / 2);
+  return geo;
+}
+
+// ── The blessed items (built in natural units, then scaled onto the altar) ──
+const POOJA_ITEMS = {
+  car() {
+    const g = new THREE.Group();
+    const paint = physical(0xd32f2f, { roughness: 0.3, clearcoat: 0.9 });
+    g.add(mesh(new THREE.BoxGeometry(1.0, 0.22, 0.46), paint, 0, 0.2, 0));
+    g.add(mesh(new THREE.BoxGeometry(0.56, 0.2, 0.42), paint, -0.04, 0.4, 0));
+    g.add(mesh(new THREE.BoxGeometry(0.5, 0.14, 0.425), std(0x22334a, 0.15, { metalness: 0.3 }), -0.04, 0.41, 0));
+    for (const sx of [-1, 1]) for (const sz of [-1, 1]) {
+      const w = wheel(0.1, 0.07);
+      w.position.set(sx * 0.32, 0.1, sz * 0.23);
+      g.add(w);
+    }
+    for (const sz of [-1, 1]) {
+      g.add(mesh(new THREE.SphereGeometry(0.035, 12, 10), std(0xfff3b0, 0.2, { emissive: 0xffe08a, emissiveIntensity: 0.6 }), 0.5, 0.23, sz * 0.15));
+      g.add(mesh(new THREE.SphereGeometry(0.03, 12, 10), std(0xb71c1c, 0.3, { emissive: 0x7a0000, emissiveIntensity: 0.5 }), -0.5, 0.23, sz * 0.15));
+    }
+    // Lemons by the wheels, as on Ayudha Pooja morning.
+    for (const sx of [-1, 1]) g.add(mesh(new THREE.SphereGeometry(0.04, 14, 10), std(0xf4e04d, 0.5), sx * 0.32 + 0.12, 0.04, 0.3));
+    tilak(g, 0.12, 0.2, 0.231);
+    tilak(g, -0.04, 0.47, 0.211, 0, 0.8);
+    garland(g, 0.46, 0.07, 0.36, 0.24);
+    return g;
+  },
+  tools() {
+    const g = new THREE.Group();
+    const steel = std(0xb0bec5, 0.25, { metalness: 0.9 }), red = physical(0xc62828), wood = std(0x8d5524, 0.7);
+    g.add(mesh(new THREE.BoxGeometry(0.7, 0.3, 0.32), red, 0, 0.15, -0.05));
+    g.add(mesh(new THREE.BoxGeometry(0.72, 0.03, 0.34), std(0x8e0000, 0.5), 0, 0.31, -0.05));
+    g.add(mesh(new THREE.TorusGeometry(0.1, 0.018, 8, 20, Math.PI), steel, 0, 0.32, -0.05));
+    const hammer = new THREE.Group();
+    hammer.add(mesh(new THREE.CylinderGeometry(0.022, 0.026, 0.5, 12), wood, 0, 0.25, 0));
+    hammer.add(mesh(new THREE.BoxGeometry(0.2, 0.07, 0.07), steel, 0.03, 0.5, 0));
+    hammer.position.set(0.44, 0, 0.12);
+    hammer.rotation.z = 0.35;
+    g.add(hammer);
+    const sp = new THREE.Group();
+    sp.add(mesh(new THREE.BoxGeometry(0.42, 0.025, 0.05), steel));
+    for (const sx of [-1, 1]) {
+      const ring = mesh(new THREE.TorusGeometry(0.045, 0.018, 8, 20), steel, sx * 0.23, 0, 0);
+      ring.rotation.x = Math.PI / 2;
+      sp.add(ring);
+    }
+    sp.position.set(-0.08, 0.025, 0.24);
+    sp.rotation.y = 0.3;
+    g.add(sp);
+    tilak(g, -0.16, 0.17, 0.111);
+    tilak(g, 0.16, 0.17, 0.111);
+    garland(g, 0.64, 0.05, 0.28, 0.12);
+    return g;
+  },
+  it() {
+    const g = new THREE.Group();
+    const body = std(0x9aa3ad, 0.35, { metalness: 0.6 });
+    g.add(mesh(new THREE.BoxGeometry(0.7, 0.03, 0.46), body, 0, 0.015, 0));
+    const kb = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.26), new THREE.MeshStandardMaterial({ map: keyboardTexture(), roughness: 0.6 }));
+    kb.rotation.x = -Math.PI / 2;
+    kb.position.set(0, 0.031, 0.05);
+    g.add(kb);
+    const lid = new THREE.Group();
+    lid.position.set(0, 0.03, -0.225);
+    lid.rotation.x = -0.32;
+    lid.add(mesh(new THREE.BoxGeometry(0.7, 0.46, 0.025), body, 0, 0.23, 0));
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.64, 0.4), new THREE.MeshBasicMaterial({ map: screenTexture(['Bug-free year 🙏', PJ.ta]) }));
+    scr.position.set(0, 0.23, 0.0135);
+    lid.add(scr);
+    tilak(lid, -0.3, 0.445, 0.0136, 0, 0.55);
+    tilak(lid, 0.3, 0.445, 0.0136, 0, 0.55);
+    g.add(lid);
+    garland(g, 0.66, 0.04, 0.05, 0.25);
+    return g;
+  },
+  factory() {
+    const g = new THREE.Group();
+    const steel = std(0x90a4ae, 0.3, { metalness: 0.85 }), dark = std(0x37474f, 0.5, { metalness: 0.6 }), yellow = physical(0xffb300);
+    g.add(mesh(new THREE.BoxGeometry(0.95, 0.12, 0.32), dark, 0, 0.06, -0.04));
+    g.add(mesh(new THREE.BoxGeometry(0.08, 0.5, 0.08), yellow, -0.12, 0.37, -0.1));
+    g.add(mesh(new THREE.BoxGeometry(0.08, 0.5, 0.08), yellow, 0.27, 0.37, -0.1));
+    const big = mesh(gearGeometry(0.26, 14, 0.06), steel, -0.12, 0.44, 0);
+    const small = mesh(gearGeometry(0.16, 9, 0.06), steel, 0.263, 0.44, 0);
+    small.rotation.z = Math.PI / 9;
+    g.add(big, small);
+    for (const x of [-0.12, 0.263]) {
+      const axle = mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.2, 14), dark, x, 0.44, -0.05);
+      axle.rotation.x = Math.PI / 2;
+      g.add(axle);
+    }
+    pj.gears.push({ m: big, w: 0.7 }, { m: small, w: -0.7 * 14 / 9 });
+    tilak(g, -0.12, 0.44, 0.041);
+    tilak(g, 0.263, 0.44, 0.041, 0, 0.8);
+    garland(g, 0.9, 0.05, 0.11, 0.13);
+    return g;
+  },
+  shop() {
+    const g = new THREE.Group();
+    const brass = std(0xd4a017, 0.3, { metalness: 1 }), wood = std(0x6d4c41, 0.6);
+    g.add(mesh(new THREE.BoxGeometry(0.42, 0.2, 0.3), wood, 0.22, 0.1, 0));
+    g.add(mesh(new THREE.BoxGeometry(0.44, 0.04, 0.32), std(0x4e342e, 0.6), 0.22, 0.22, 0));
+    for (let i = 0; i < 8; i++) {
+      g.add(mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.012, 20), brass, i < 4 ? 0.14 : 0.29, 0.247 + (i % 4) * 0.013, 0.04));
+    }
+    g.add(mesh(new THREE.CylinderGeometry(0.07, 0.09, 0.03, 20), brass, -0.25, 0.015, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.5, 10), brass, -0.25, 0.27, 0));
+    g.add(mesh(new THREE.BoxGeometry(0.5, 0.015, 0.02), brass, -0.25, 0.51, 0));
+    const dish = [[0, 0], [0.08, 0.005], [0.1, 0.03], [0.095, 0.032]].map(([x, y]) => new THREE.Vector2(x, y));
+    for (const sx of [-1, 1]) {
+      for (const dz of [-0.04, 0.04]) g.add(mesh(new THREE.CylinderGeometry(0.003, 0.003, 0.2, 4), brass, -0.25 + sx * 0.23, 0.41, dz));
+      g.add(mesh(new THREE.LatheGeometry(dish, 24), brass, -0.25 + sx * 0.23, 0.29, 0));
+    }
+    tilak(g, 0.22, 0.1, 0.151);
+    tilak(g, -0.25, 0.04, 0.091, 0, 0.7);
+    garland(g, 0.44, 0.05, 0.2, 0.17);
+    return g;
+  },
+  farm() {
+    const g = new THREE.Group();
+    const green = physical(0x2e7d32);
+    g.add(mesh(new THREE.BoxGeometry(0.5, 0.18, 0.24), green, 0.12, 0.22, 0));
+    g.add(mesh(new THREE.BoxGeometry(0.24, 0.14, 0.3), green, -0.2, 0.3, 0));
+    g.add(mesh(new THREE.BoxGeometry(0.12, 0.05, 0.16), std(0x212121, 0.6), -0.22, 0.4, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.22, 10), std(0x424242, 0.4, { metalness: 0.7 }), 0.25, 0.42, 0.07));
+    for (const sz of [-1, 1]) {
+      const rear = wheel(0.2, 0.1, 0x1b1b1b, 0xffc107);
+      rear.position.set(-0.2, 0.2, sz * 0.21);
+      g.add(rear);
+      const front = wheel(0.1, 0.07, 0x1b1b1b, 0xffc107);
+      front.position.set(0.27, 0.1, sz * 0.15);
+      g.add(front);
+    }
+    const paddy = std(0xe6b422, 0.7);
+    for (let i = 0; i < 9; i++) {
+      const st = mesh(new THREE.CylinderGeometry(0.006, 0.006, 0.36, 4), paddy, 0.48 + rand(-0.03, 0.03), 0.18, 0.2 + rand(-0.03, 0.03));
+      st.rotation.z = rand(-0.25, 0.25);
+      g.add(st);
+    }
+    tilak(g, 0.15, 0.24, 0.121);
+    garland(g, 0.42, 0.06, 0.3, 0.13);
+    return g;
+  },
+  student() {
+    const g = new THREE.Group();
+    [0x1565c0, 0xc62828, 0x2e7d32].forEach((c, i) => {
+      g.add(mesh(new THREE.BoxGeometry(0.42 - i * 0.03, 0.065, 0.3 - i * 0.02), physical(c, { roughness: 0.6, clearcoat: 0.2 }), -0.2, 0.033 + i * 0.066, 0));
+      g.add(mesh(new THREE.BoxGeometry(0.4 - i * 0.03, 0.05, 0.285 - i * 0.02), std(0xfaf6ea, 0.9), -0.195, 0.033 + i * 0.066, 0.004));
+    });
+    const page = new THREE.MeshStandardMaterial({ map: screenTexture(['ஓம்', 'Saraswathi']), roughness: 0.9, side: THREE.DoubleSide });
+    for (const sx of [-1, 1]) {
+      const pg = new THREE.Mesh(new THREE.PlaneGeometry(0.2, 0.28), page);
+      pg.rotation.set(-Math.PI / 2 + 0.25, sx * 0.18, 0);
+      pg.position.set(0.24 + sx * 0.1, 0.03, 0.02);
+      g.add(pg);
+    }
+    const pen = new THREE.Group();
+    pen.add(mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.26, 10), physical(0x1a237e)));
+    pen.add(mesh(new THREE.ConeGeometry(0.012, 0.04, 10), std(0xd4a017, 0.3, { metalness: 1 }), 0, 0.15, 0));
+    pen.rotation.z = Math.PI / 2;
+    pen.position.set(0.22, 0.015, 0.2);
+    g.add(pen);
+    tilak(g, -0.2, 0.2, 0.131);
+    garland(g, 0.42, 0.04, 0.22, 0.16);
+    return g;
+  },
+  // Saraswathi Pooja: her symbols — the veena, books and laptop, a lotus and the white swan.
+  saraswathi() {
+    const g = new THREE.Group();
+    const wood = physical(0x8d3b12, { roughness: 0.4, clearcoat: 0.8 }), gold = std(0xd4a017, 0.25, { metalness: 1 });
+    const veena = new THREE.Group();
+    const kudam = mesh(new THREE.SphereGeometry(0.22, 32, 24), wood, 0.42, 0.22, 0);
+    kudam.scale.set(1, 0.95, 0.85);
+    veena.add(kudam);
+    const band = mesh(new THREE.TorusGeometry(0.15, 0.012, 8, 32), gold, 0.42, 0.36, 0);
+    band.rotation.x = Math.PI / 2;
+    veena.add(band);
+    const neck = mesh(new THREE.CylinderGeometry(0.055, 0.07, 0.95, 20), wood, -0.08, 0.32, 0);
+    neck.rotation.z = Math.PI / 2 + 0.06;
+    veena.add(neck);
+    for (let i = 0; i < 10; i++) veena.add(mesh(new THREE.BoxGeometry(0.01, 0.012, 0.09), gold, 0.28 - i * 0.07, 0.38 + i * 0.004, 0));
+    veena.add(mesh(new THREE.SphereGeometry(0.11, 24, 18), std(0xe0c08a, 0.6), -0.4, 0.16, 0));
+    const head = mesh(new THREE.TorusGeometry(0.06, 0.025, 10, 24, Math.PI * 1.4), gold, -0.6, 0.38, 0);
+    head.rotation.z = 0.8;
+    veena.add(head);
+    for (let i = 0; i < 4; i++) {
+      const str = mesh(new THREE.CylinderGeometry(0.0025, 0.0025, 1.0, 4), gold, -0.05, 0.4 + i * 0.006, -0.03 + i * 0.02);
+      str.rotation.z = Math.PI / 2 + 0.06;
+      veena.add(str);
+    }
+    tilak(veena, 0.42, 0.22, 0.188);
+    garland(veena, 0.5, 0.06, 0.38, 0.2);
+    g.add(veena);
+
+    const books = new THREE.Group();
+    [0x6a1b9a, 0x1565c0].forEach((c, i) => {
+      books.add(mesh(new THREE.BoxGeometry(0.34 - i * 0.03, 0.06, 0.24), physical(c, { roughness: 0.6, clearcoat: 0.2 }), 0, 0.03 + i * 0.06, 0));
+    });
+    const lap = new THREE.Group();
+    lap.add(mesh(new THREE.BoxGeometry(0.3, 0.015, 0.2), std(0x9aa3ad, 0.35, { metalness: 0.6 }), 0, 0.0075, 0));
+    const lid = new THREE.Group();
+    lid.position.set(0, 0.015, -0.1);
+    lid.rotation.x = -0.3;
+    lid.add(mesh(new THREE.BoxGeometry(0.3, 0.2, 0.012), std(0x9aa3ad, 0.35, { metalness: 0.6 }), 0, 0.1, 0));
+    const scr = new THREE.Mesh(new THREE.PlaneGeometry(0.27, 0.17), new THREE.MeshBasicMaterial({ map: screenTexture(['📚 சரஸ்வதி துணை', 'Saraswathi Pooja']) }));
+    scr.position.set(0, 0.1, 0.007);
+    lid.add(scr);
+    lap.add(lid);
+    lap.position.y = 0.12;
+    books.add(lap);
+    tilak(books, 0, 0.03, 0.121, 0, 0.7);
+    books.position.set(-0.95, 0, 0.08);
+    books.rotation.y = 0.35;
+    g.add(books);
+
+    const lotus = new THREE.Group();
+    const pad = mesh(new THREE.CircleGeometry(0.16, 24), std(0x388e3c, 0.6, { side: THREE.DoubleSide }), 0, 0.005, 0);
+    pad.rotation.x = -Math.PI / 2;
+    lotus.add(pad);
+    for (let ring = 0; ring < 2; ring++) {
+      for (let i = 0; i < 8; i++) {
+        const pivot = new THREE.Group();
+        pivot.rotation.y = (i / 8) * Math.PI * 2 + ring * 0.4;
+        const petal = mesh(new THREE.SphereGeometry(1, 14, 10), physical(ring ? 0xf8bbd0 : 0xf06292, { roughness: 0.5 }), 0, 0.07, 0.05 - ring * 0.02);
+        petal.scale.set(0.035, 0.08, 0.016);
+        petal.rotation.x = 0.7 - ring * 0.35;
+        pivot.add(petal);
+        lotus.add(pivot);
+      }
+    }
+    lotus.add(mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.04, 16), std(0xfbc02d, 0.6), 0, 0.06, 0));
+    lotus.position.set(0.95, 0, 0.18);
+    g.add(lotus);
+
+    const swan = new THREE.Group();
+    const white = physical(0xfafafa, { roughness: 0.45 });
+    const body = mesh(new THREE.SphereGeometry(1, 20, 16), white, 0, 0.09, 0);
+    body.scale.set(0.16, 0.085, 0.1);
+    swan.add(body);
+    const neckCurve = new THREE.CatmullRomCurve3([[0.11, 0.1, 0], [0.18, 0.2, 0], [0.15, 0.3, 0], [0.19, 0.34, 0]].map(([x, y, z]) => new THREE.Vector3(x, y, z)));
+    swan.add(mesh(new THREE.TubeGeometry(neckCurve, 20, 0.02, 8, false), white));
+    swan.add(mesh(new THREE.SphereGeometry(0.035, 14, 10), white, 0.2, 0.345, 0));
+    const beak = mesh(new THREE.ConeGeometry(0.014, 0.05, 10), std(0xff8f00, 0.4), 0.245, 0.34, 0);
+    beak.rotation.z = -Math.PI / 2;
+    swan.add(beak);
+    swan.add(mesh(new THREE.SphereGeometry(0.007, 8, 6), std(0x111111, 0.3), 0.21, 0.355, 0.03));
+    const tail = mesh(new THREE.ConeGeometry(0.04, 0.1, 10), white, -0.17, 0.13, 0);
+    tail.rotation.z = Math.PI / 2 + 0.6;
+    swan.add(tail);
+    swan.position.set(0.9, 0, -0.18);
+    swan.rotation.y = -0.5;
+    g.add(swan);
+    return g;
+  },
+};
+
+// Puts a model on the altar: scaled so its widest side is `size`, bottom resting on y = 0.
+function seated(model, size) {
+  const g = normalized(model, size);
+  g.updateMatrixWorld(true);
+  const b = new THREE.Box3().setFromObject(g);
+  g.children[0].position.y -= b.min.y;
+  return g;
+}
+
+function flameMesh() {
+  const g = new THREE.Group();
+  const outer = new THREE.Mesh(new THREE.SphereGeometry(0.03, 10, 8), new THREE.MeshBasicMaterial({ color: 0xff8a1f, transparent: true, opacity: 0.85 }));
+  outer.scale.set(1, 2.6, 1);
+  outer.position.y = 0.05;
+  const core = new THREE.Mesh(new THREE.SphereGeometry(0.02, 10, 8), new THREE.MeshBasicMaterial({ color: 0xfff1b8 }));
+  core.scale.set(1, 2.2, 1);
+  core.position.y = 0.04;
+  const glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: GLOW, color: 0xffa040, transparent: true, opacity: 0.85, blending: THREE.AdditiveBlending, depthWrite: false }));
+  glow.scale.setScalar(0.3);
+  glow.position.y = 0.06;
+  g.add(outer, core, glow);
+  g.userData.seed = rand(0, 10);
+  g.visible = false;
+  return g;
+}
+
+function brassLamp() {
+  const g = new THREE.Group();
+  const brass = std(0xd4a017, 0.25, { metalness: 1 });
+  const prof = [[0, 0], [0.17, 0], [0.18, 0.02], [0.12, 0.05], [0.05, 0.08], [0.035, 0.12], [0.03, 0.5], [0.05, 0.52],
+    [0.035, 0.55], [0.03, 0.6], [0.16, 0.66], [0.17, 0.69], [0.03, 0.7], [0.02, 0.78], [0.045, 0.82], [0, 0.88]]
+    .map(([x, y]) => new THREE.Vector2(x, y));
+  g.add(shadowed(new THREE.Mesh(new THREE.LatheGeometry(prof, 32), brass)));
+  for (let i = 0; i < 5; i++) {
+    const a = (i / 5) * Math.PI * 2 + Math.PI / 2;
+    const f = flameMesh();
+    f.position.set(Math.cos(a) * 0.15, 0.69, Math.sin(a) * 0.15);
+    g.add(f);
+    pj.flames.push(f);
+  }
+  return g;
+}
+
+function sugarcane(x, z, lean) {
+  const g = new THREE.Group();
+  const purple = std(0x5b2a4a, 0.5), node = std(0xc8b48a, 0.6), leafMat = std(0x4caf50, 0.6, { side: THREE.DoubleSide });
+  for (let i = 0; i < 9; i++) {
+    g.add(mesh(new THREE.CylinderGeometry(0.035, 0.038, 0.2, 10), purple, 0, 0.1 + i * 0.21, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.042, 0.042, 0.018, 10), node, 0, 0.205 + i * 0.21, 0));
+  }
+  for (let i = 0; i < 6; i++) {
+    const geo = new THREE.PlaneGeometry(0.05, 0.55);
+    geo.translate(0, 0.27, 0);
+    const leaf = new THREE.Mesh(geo, leafMat);
+    leaf.position.y = 1.9;
+    leaf.rotation.set(rand(-0.5, 0.5), (i / 6) * Math.PI * 2, rand(0.5, 1.1));
+    g.add(leaf);
+  }
+  g.position.set(x, 0, z);
+  g.rotation.z = lean;
+  return g;
+}
+
+function prasadamPile(count, r, color, cx, cz, spread, height, y0) {
+  const im = new THREE.InstancedMesh(new THREE.SphereGeometry(r, 8, 6), std(color, 0.7), count);
+  const d = new THREE.Object3D();
+  for (let i = 0; i < count; i++) {
+    const a = rand(0, Math.PI * 2), rr = Math.sqrt(Math.random()) * spread;
+    d.position.set(cx + Math.cos(a) * rr, y0 + r + rand(0, height * (1 - rr / spread)), cz + Math.sin(a) * rr * 0.6);
+    d.scale.set(rand(0.8, 1.3), rand(0.6, 1), rand(0.8, 1.3));
+    d.updateMatrix();
+    im.setMatrixAt(i, d.matrix);
+  }
+  im.castShadow = true;
+  return im;
+}
+
+function buildPooja() {
+  const TOP = 0.12;                                   // top of the manai
+  const kolam = new THREE.Mesh(new THREE.PlaneGeometry(2.6, 2.6), new THREE.MeshStandardMaterial({ map: kolamTexture(), transparent: true, roughness: 0.9, depthWrite: false }));
+  kolam.rotation.x = -Math.PI / 2;
+  kolam.position.y = 0.004;
+  hero.add(kolam);
+
+  const manai = mesh(new THREE.BoxGeometry(1.6, TOP, 0.95), std(0x7a4a1e, 0.6), 0, TOP / 2, 0);
+  hero.add(manai);
+  const front = new THREE.Mesh(new THREE.PlaneGeometry(1.6, TOP), new THREE.MeshStandardMaterial({ map: manaiTexture(), roughness: 0.6 }));
+  front.position.set(0, TOP / 2, 0.476);
+  hero.add(front);
+
+  const centre = IS_SAR ? seated(POOJA_ITEMS.saraswathi(), 1.5) : seated((POOJA_ITEMS[W.work] || POOJA_ITEMS.car)(), 0.95);
+  centre.position.set(0, TOP, -0.1);
+  hero.add(centre);
+
+  const leaf = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 0.32), new THREE.MeshStandardMaterial({ map: leafTexture(), transparent: true, roughness: 0.7, side: THREE.DoubleSide }));
+  leaf.rotation.x = -Math.PI / 2;
+  leaf.position.set(0, TOP + 0.003, 0.3);
+  hero.add(leaf);
+  hero.add(prasadamPile(70, 0.013, 0xfdf6e3, -0.26, 0.3, 0.1, 0.05, TOP));    // pori
+  hero.add(prasadamPile(40, 0.015, 0xf2c14e, 0.0, 0.3, 0.08, 0.035, TOP));    // pottukadalai
+  const bowl = [[0, 0], [0.07, 0.004], [0.09, 0.04], [0.085, 0.043]].map(([x, y]) => new THREE.Vector2(x, y));
+  hero.add(mesh(new THREE.LatheGeometry(bowl, 24), std(0xd4a017, 0.3, { metalness: 1 }), 0.26, TOP, 0.3));
+  hero.add(prasadamPile(30, 0.014, 0x8d6e3f, 0.26, 0.3, 0.055, 0.03, TOP + 0.01)); // sundal
+  for (const dx of [0, 0.06]) {
+    const banana = mesh(new THREE.CapsuleGeometry(0.025, 0.16, 6, 12), std(0xf5d33a, 0.5), 0.62 + dx, TOP + 0.03, 0.28);
+    banana.rotation.set(Math.PI / 2, 0, 0.3);
+    hero.add(banana);
+  }
+
+  const lamp = brassLamp();
+  lamp.scale.setScalar(0.85);
+  lamp.position.set(IS_SAR ? -0.55 : -0.62, TOP, 0.32);
+  hero.add(lamp);
+  pj.lampLight = new THREE.PointLight(0xffa64d, 0, 3.5, 1.4);
+  pj.lampLight.position.set(lamp.position.x, TOP + 0.8, lamp.position.z + 0.1);
+  hero.add(pj.lampLight);
+
+  hero.add(sugarcane(-0.98, -0.3, -0.12), sugarcane(0.98, -0.3, 0.12));
+  garland(hero, 1.62, 0.1, TOP + 0.02, 0.49);           // across the front of the manai
+
+  if (!IS_SAR && W.work === 'car') {                    // 🚿 bubbles for the wash
+    pj.bubbles = new THREE.Group();
+    const bubbleMat = new THREE.MeshStandardMaterial({ color: 0xffffff, transparent: true, opacity: 0.55, roughness: 0.1, metalness: 0.1 });
+    for (let i = 0; i < 34; i++) {
+      const b = new THREE.Mesh(new THREE.SphereGeometry(rand(0.025, 0.06), 12, 10), bubbleMat);
+      b.userData = { x: rand(-0.5, 0.5), z: rand(-0.2, 0.35), speed: rand(0.25, 0.5), seed: rand(0, 10) };
+      pj.bubbles.add(b);
+    }
+    pj.bubbles.position.set(0, TOP, -0.1);
+    pj.bubbles.visible = false;
+    hero.add(pj.bubbles);
+  }
+
+  const PETAL_N = 60;
+  pj.petals = new THREE.InstancedMesh(new THREE.CircleGeometry(0.03, 8), new THREE.MeshStandardMaterial({ color: 0xffffff, side: THREE.DoubleSide, roughness: 0.7 }), PETAL_N);
+  const petalCols = [0xff8c00, 0xffc107, 0xe53935, 0xf06292];
+  for (let i = 0; i < PETAL_N; i++) {
+    pj.petals.setColorAt(i, new THREE.Color(petalCols[i % petalCols.length]));
+    pj.petalData.push({ x: rand(-1.1, 1.1), z: rand(-0.6, 0.7), y: rand(0.2, 3.2), v: rand(0.15, 0.32), seed: rand(0, 10), s: rand(0.7, 1.4) });
+  }
+  pj.petals.visible = false;
+  hero.add(pj.petals);
+
+  pj.title = buildTitle(PJ.word, pj.titleY, 'POOJA WISHES', 1.6);
+}
+
+async function lightPooja() {
+  if (phase !== 'open' || pj.lit) return;
+  pj.lit = true;
+  phase = 'pooja';
+  $('hint').hidden = true;
+  track('gift_open');
+  pj.flames.forEach((f, i) => {
+    setTimeout(() => { f.visible = true; sfx.light(); }, i * 220);
+    f.scale.setScalar(0.0001);
+    tween(0.5, (k) => f.scale.setScalar(Math.max(0.0001, easeOutBack(k))), i * 0.22);
+  });
+  tween(1.6, (k) => { pj.lightK = k; });
+  await wait(pj.flames.length * 220 + 300);
+  sfx.bell();
+  sfx.bell(0.9);
+  if (pj.bubbles) {
+    showLyric('🚿 First, a good wash…');
+    sfx.whoosh();
+    pj.washing = true;
+    pj.bubbles.visible = true;
+    await wait(2600);
+    pj.washing = false;
+    pj.bubbleFade = 1;
+    sfx.sparkle();
+    showLyric('✨ Shining clean! Now the pooja 🙏');
+    await wait(1100);
+  }
+  pj.garlands.forEach((gl, i) => tween(0.8, (k) => gl.scale.setScalar(Math.max(0.0001, easeOutBack(k))), i * 0.15));
+  pj.tilaks.forEach((tk, i) => tween(0.45, (k) => tk.scale.setScalar(Math.max(0.0001, easeOutBack(k))), 0.3 + i * 0.12));
+  pj.petals.visible = true;
+  burstConfetti(80, new THREE.Vector3(0, 1.4, 0), 0.8);
+  await wait(700);
+  tween(1.1, (k) => pj.title.scale.setScalar(Math.max(0.0001, easeOutBack(k))));
+  playSong(PJ_SONG, PJ_LYRICS, 0.42);
+  setTimeout(() => sfx.bell(), 2600);
+  setTimeout(() => sfx.bell(), 5300);
+  await wait(6800);
+  hideLyric();
+  if (phase === 'pooja') showCard();
+}
+
+function animatePooja(t, dt) {
+  for (const f of pj.flames) {
+    if (!f.visible) continue;
+    const seed = f.userData.seed;
+    const flick = 1 + Math.sin(t * 17 + seed) * 0.1 + Math.sin(t * 29 + seed * 2) * 0.07;
+    f.children[0].scale.set(1, 2.6 * flick, 1);
+    f.children[1].scale.set(1, 2.2 * flick, 1);
+  }
+  if (pj.lampLight) pj.lampLight.intensity = pj.lightK * (2.6 + Math.sin(t * 13) * 0.25 + Math.sin(t * 23) * 0.15);
+  if (pj.lit) for (const gear of pj.gears) gear.m.rotation.z += gear.w * dt;
+
+  if (pj.bubbles && pj.bubbles.visible) {
+    if (pj.washing) pj.washT += dt;
+    else pj.bubbleFade = Math.max(0, pj.bubbleFade - dt * 1.5);
+    const fade = pj.washing ? Math.min(1, pj.washT * 2) : pj.bubbleFade;
+    pj.bubbles.children.forEach((b) => {
+      const u = b.userData;
+      b.position.set(u.x + Math.sin(t * 2 + u.seed) * 0.03, ((pj.washT * u.speed + u.seed) % 0.6), u.z);
+      b.scale.setScalar(Math.max(0.0001, fade * (0.8 + Math.sin(t * 6 + u.seed) * 0.2)));
+    });
+    if (!pj.washing && pj.bubbleFade <= 0) pj.bubbles.visible = false;
+  }
+
+  if (pj.petals && pj.petals.visible) {
+    pj.petalData.forEach((p, i) => {
+      p.y -= p.v * dt;
+      if (p.y < 0.15) { p.y = 3.2; p.x = rand(-1.1, 1.1); }
+      dummy.position.set(p.x + Math.sin(t * 0.8 + p.seed) * 0.1, p.y, p.z);
+      dummy.rotation.set(t * 1.3 + p.seed, t * 0.9 + p.seed, 0);
+      dummy.scale.set(p.s, p.s * 0.6, p.s);
+      dummy.updateMatrix();
+      pj.petals.setMatrixAt(i, dummy.matrix);
+    });
+    pj.petals.instanceMatrix.needsUpdate = true;
+  }
+  if (pj.title && pj.title.scale.x > 0.5) pj.title.position.y = pj.titleY + Math.sin(t * 1.2) * 0.04;
+}
+
+function resetPooja() {
+  pj.lit = false;
+  pj.lightK = 0;
+  pj.flames.forEach((f) => { f.visible = false; });
+  pj.garlands.forEach((g) => g.scale.setScalar(0.0001));
+  pj.tilaks.forEach((g) => g.scale.setScalar(0.0001));
+  pj.petals.visible = false;
+  pj.title.scale.setScalar(0.0001);
+  pj.washing = false;
+  pj.washT = 0;
+  pj.bubbleFade = 0;
+  if (pj.bubbles) pj.bubbles.visible = false;
+}
+
+// Short first names in the link's query, so WhatsApp's preview can say who sent it.
+function withNames(path, from, to) {
+  if (!from || !to) return path;
+  const q = new URLSearchParams();
+  q.set('f', from.slice(0, 24));
+  q.set('t', to.slice(0, 24));
+  return `${path}?${q}`;
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -1722,7 +2461,7 @@ function buildReaction() {
     : W.react === 'bff' ? normalized(PROPS.hearts2(), 1.3)
       : (() => {
         const o = new THREE.Group();
-        o.add(emojiFace(FACE[W.react] || W.react));
+        o.add(emojiFace(REACT.face || FACE[W.react] || W.react));
         return o;
       })();
   obj.position.y = 1.35;
@@ -1951,7 +2690,7 @@ function paintFrame(ctx, w, h) {
   ctx.drawImage(renderer.domElement, 0, 0, w, h);
   // Watermark pill — every shared photo/video points back to the creator.
   const s = w / 420;
-  const label = `${IS_AW ? '🏆' : IS_RX ? REACT.emoji : IS_TY ? '💖' : '🎂'} Make yours free · wish.inixr.com`;
+  const label = `${IS_PJ ? '🪔' : IS_AW ? '🏆' : IS_RX ? REACT.emoji : IS_TY ? '💖' : '🎂'} Make yours free · dream.inixr.com`;
   ctx.font = `800 ${Math.round(15 * s)}px ${FONT}`;
   const tw = ctx.measureText(label).width;
   const ph = 34 * s, pw = tw + 30 * s, px = (w - pw) / 2, py = h - ph - 22 * s;
@@ -2002,12 +2741,14 @@ function capture() {
 async function shareShot() {
   if (!shot.blob) return;
   const ext = shot.kind === 'video' ? ($('shotSave').download.split('.').pop()) : 'jpg';
-  const file = new File([shot.blob], `${IS_RX ? 'reaction' : IS_TY ? 'thank-you' : 'birthday-surprise'}.${ext}`, { type: shot.blob.type });
-  const text = IS_AW
-    ? `😂 I just won the ${AW_TITLE} AWARD 🏆 Want to give your friends an award? Tap 👉 https://wish.inixr.com/create/`
+  const file = new File([shot.blob], `${IS_PJ ? 'pooja-gift' : IS_RX ? 'reaction' : IS_TY ? 'thank-you' : 'birthday-surprise'}.${ext}`, { type: shot.blob.type });
+  const text = IS_PJ
+    ? `🪔 ${PJ.ta}! Look at my Pooja gift 🙏 Send one to your friends 👉 https://dream.inixr.com/create/`
+    : IS_AW
+    ? `😂 I just won the ${AW_TITLE} AWARD 🏆 Want to give your friends an award? Tap 👉 https://dream.inixr.com/create/`
     : HEARTY
-    ? `Look what I got ${IS_RX ? REACT.emoji : '💖'} Want to send one too? Tap 👉 https://wish.inixr.com/create/`
-    : 'Look at my birthday surprise 🎂 Want to send one too? Tap 👉 https://wish.inixr.com/create/';
+    ? `Look what I got ${IS_RX ? REACT.emoji : '💖'} Want to send one too? Tap 👉 https://dream.inixr.com/create/`
+    : 'Look at my birthday surprise 🎂 Want to send one too? Tap 👉 https://dream.inixr.com/create/';
   const done = () => track(shot.kind === 'video' ? 'video_share' : 'photo_share');
   const saveInstead = (why) => {
     $('shotSave').click();
@@ -2205,6 +2946,9 @@ async function reveal() {
   await wait(1200);
   if (IS_RX) {
     playReaction();
+  } else if (IS_PJ) {
+    phase = 'open';
+    setHint({ text: `${W.from || 'Your friend'} sent you a Pooja gift 🙏`, main: '🪔 Light the lamp', onMain: lightPooja });
   } else if (IS_BOX) {
     phase = 'open';
     setHint(IS_AW
@@ -2259,12 +3003,14 @@ async function celebrate() {
 function showCard() {
   phase = 'done';
   $('cardTo').textContent = `Dear ${W.to},`;
-  $('cardMsg').textContent = W.msg || (IS_AW ? `You've won the ${AW_TITLE} AWARD! 😂🏆` : IS_RX ? `${REACT.word.charAt(0)}${REACT.word.slice(1).toLowerCase()} ${REACT.emoji}` : IS_TY ? 'Thank you so much! 💖' : 'Happy Birthday! 🎂');
+  $('cardMsg').textContent = W.msg || (IS_PJ ? `${PJ.ta}! 🙏` : IS_AW ? `You've won the ${AW_TITLE} AWARD! 😂🏆` : IS_RX ? `${REACT.word.charAt(0)}${REACT.word.slice(1).toLowerCase()} ${REACT.emoji}` : IS_TY ? 'Thank you so much! 💖' : 'Happy Birthday! 🎂');
   $('cardFrom').textContent = W.from ? `— with love, ${W.from}` : '';
   $('reactLabel').textContent = W.from ? `React to ${W.from}:` : 'React:';
   const btn = $('primaryBtn');
   btn.className = 'big-btn pink';
-  btn.textContent = IS_AW
+  btn.textContent = IS_PJ
+    ? (W.from ? `🪔 Send a Pooja gift back to ${W.from}` : '🪔 Send a Pooja gift to someone')
+    : IS_AW
     ? (W.from ? `🏆 Give an award back to ${W.from}` : '🏆 Give someone an award')
     : (W.from ? `💌 Send something back to ${W.from}` : '💌 Send a surprise to someone');
   $('card').classList.remove('min');
@@ -2276,7 +3022,9 @@ async function replay() {
   track('replay');
   $('card').hidden = true;
   stopSong();
-  if (IS_RX) {
+  if (IS_PJ) {
+    resetPooja();
+  } else if (IS_RX) {
     rx.obj.scale.setScalar(0.0001);
     rx.glow.material.opacity = 0;
     rx.text.scale.setScalar(0.0001);
@@ -2318,7 +3066,7 @@ renderer.domElement.addEventListener('pointerup', (e) => {
 
 function onTap(x, y) {
   if (phase === 'light') { lightCandles(); return; }
-  if (phase === 'open') { openGift(); return; }
+  if (phase === 'open') { if (IS_PJ) lightPooja(); else openGift(); return; }
   if (phase === 'blow') { tapBlow(); return; }
   pointer.set((x / innerWidth) * 2 - 1, -(y / innerHeight) * 2 + 1);
   raycaster.setFromCamera(pointer, camera);
@@ -2376,7 +3124,7 @@ $('cardShow').addEventListener('click', () => $('card').classList.remove('min'))
 $('primaryBtn').addEventListener('click', () => {
   track('send_back');
   const p = new URLSearchParams();
-  p.set('k', IS_AW ? 'aw' : IS_TY || IS_RX ? 'rx' : 'ty');
+  p.set('k', IS_PJ ? 'pj' : IS_AW ? 'aw' : IS_TY || IS_RX ? 'rx' : 'ty');
   p.set('f', W.to);                            // the viewer becomes the sender
   if (W.from) p.set('t', W.from);
   if (W.id) p.set('r', W.id);
@@ -2404,12 +3152,28 @@ function openReact(key) {
   reactKey = key;
   const R = REACTS[key];
   $('reactBig').textContent = R.emoji;
-  $('reactTitle').textContent = W.from ? `Send ${R.emoji} to ${W.from}` : `Send ${R.emoji}`;
+  $('reactTitle').textContent = R.label
+    ? (W.from ? `${R.emoji} ${R.label} — to ${W.from}` : `${R.emoji} ${R.label}`)
+    : (W.from ? `Send ${R.emoji} to ${W.from}` : `Send ${R.emoji}`);
+  if (R.note) $('reactMsg').value = R.note;
   $('reactTo').hidden = !!W.from;
   $('reactTo').value = W.from || '';
   $('reactFrom').value = W.demo ? '' : W.to;
   $('reactErr').textContent = '';
   $('reactSheet').hidden = false;
+}
+// Pooja gifts get festival replies instead of the usual faces.
+if (IS_PJ) {
+  const row = $('reactRow');
+  row.querySelectorAll('button[data-x]').forEach((b) => b.remove());
+  ['sundal', 'bikewash', 'laptop', 'pori', 'sweets', 'bff', 'love'].forEach((key) => {
+    const b = document.createElement('button');
+    b.dataset.x = key;
+    b.setAttribute('aria-label', REACTS[key].label || REACTS[key].word);
+    b.title = REACTS[key].label || REACTS[key].word;
+    b.textContent = REACTS[key].emoji;
+    row.appendChild(b);
+  });
 }
 $('reactRow').querySelectorAll('button[data-x]').forEach((b) => b.addEventListener('click', () => openReact(b.dataset.x)));
 $('reactClose').addEventListener('click', () => { $('reactSheet').hidden = true; });
@@ -2421,7 +3185,7 @@ $('reactSend').addEventListener('click', () => {
   const R = REACTS[reactKey];
   const id = newId();
   const data = { k: 'rx', t: to, f: from, m: $('reactMsg').value.trim().slice(0, 120), i: id, x: reactKey, y: 1 };
-  const url = `${location.origin}${REACT_URL}#d=${b64url(JSON.stringify(data))}`;
+  const url = `${location.origin}${withNames(REACT_URL, from, to)}#d=${b64url(JSON.stringify(data))}`;
   beacon({ e: 'react', k: W.kind, i: W.id, r: '' });
   beacon({ e: 'link_created', k: 'rx', i: id, r: W.id });
   const text = `${R.emoji} ${from} ${R.verb}! Tap to see it in 3D 👉 ${url}`;
@@ -2484,6 +3248,8 @@ function frame() {
       rx.glow.position.y = rx.obj.position.y;
       rx.text.position.y = 2.6 + Math.sin(t * 1.2) * 0.04;
     }
+  } else if (IS_PJ) {
+    animatePooja(t, dt);
   } else if (ty.opened) {
     ty.heart.rotation.y = Math.sin(t * 0.9) * 0.5;
     if (W.item === 'heart' && ty.heart.scale.x > 0.9) ty.heart.scale.setScalar(1 + Math.max(0, Math.sin(t * 5.2)) * 0.05);
@@ -2581,7 +3347,14 @@ function frame() {
 
 // ── Boot ────────────────────────────────────────────────────────
 (async function boot() {
-  if (IS_AW) {
+  if (IS_PJ) {
+    $('introEmoji').textContent = PJ.emoji;
+    $('introTitle').textContent = W.demo
+      ? 'Preview: this is what they will see 🪔'
+      : `Hey ${W.to}! 🪔 ${W.from || 'Someone'} sent you a Pooja gift!`;
+    $('introSub').textContent = `${PJ.ta} · Turn your sound on 🔊`;
+    $('openBtn').textContent = 'Open my Pooja gift 🪔';
+  } else if (IS_AW) {
     $('introEmoji').textContent = '🏆';
     $('introTitle').textContent = W.demo
       ? 'Preview: this is what they will see 🏆'
@@ -2616,7 +3389,7 @@ function frame() {
   try {
     await Promise.race([document.fonts.load(`800 100px ${FONT}`), wait(2500)]);
   } catch { /* fall back to system font */ }
-  if (IS_RX) { buildReaction(); buildFloaters(); } else if (IS_BOX) { buildGift(); if (IS_TY) buildFloaters(); } else { buildCake(); }
+  if (IS_PJ) { buildPooja(); } else if (IS_RX) { buildReaction(); buildFloaters(); } else if (IS_BOX) { buildGift(); if (IS_TY) buildFloaters(); } else { buildCake(); }
   buildBalloons();
   requestAnimationFrame(frame);
 })();

@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/wish/wish.css?v=9">
+  <link rel="stylesheet" href="/static/wish/wish.css?v=12">
   <style>
     html { overflow-y: auto; height: auto; }
     body { overflow: visible; height: auto; min-height: 100%; overscroll-behavior: auto; }
@@ -42,8 +42,8 @@
     .opt { font-weight: 500; color: var(--muted); font-size: 0.85rem; }
     .actions { display: flex; flex-direction: column; gap: 10px; margin-top: 18px; }
     .actions .big-btn { width: 100%; }
-    .kinds { display: flex; gap: 4px; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-line); border-radius: 999px; padding: 4px; margin: 0 auto 14px; max-width: 440px; }
-    .kind { flex: 1; background: none; color: var(--muted); font-weight: 800; font-size: 0.88rem; white-space: nowrap; padding: 0.55em 0; border-radius: 999px; }
+    .kinds { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; background: rgba(255, 255, 255, 0.08); border: 1px solid var(--glass-line); border-radius: 999px; padding: 4px; margin: 0 auto 14px; max-width: 440px; }
+    .kind { flex: 1 1 auto; padding-inline: 0.7em !important; background: none; color: var(--muted); font-weight: 800; font-size: 0.88rem; white-space: nowrap; padding: 0.55em 0; border-radius: 999px; }
     .kind.active { background: var(--accent); color: var(--accent-ink); }
     .row { display: flex; gap: 8px; }
     .row .pill-btn { flex: 1; }
@@ -53,9 +53,10 @@
     .toast.show { opacity: 1; }
   </style>
 </head>
-<body data-evt="/e/" data-view="{{ view_url }}" data-thanks="{{ thanks_url }}" data-react="{{ react_url }}" data-award="{{ award_url }}">
+<body data-evt="/e/" data-view="{{ view_url }}" data-thanks="{{ thanks_url }}" data-react="{{ react_url }}" data-award="{{ award_url }}" data-pooja="{{ pooja_url }}">
   <main class="wrap">
     <div class="kinds" role="tablist">
+      <button type="button" class="kind" data-kind="pj" role="tab">🪔 Pooja</button>
       <button type="button" class="kind" data-kind="bday" role="tab">🎂 Birthday</button>
       <button type="button" class="kind" data-kind="ty" role="tab">💖 Thanks</button>
       <button type="button" class="kind" data-kind="rx" role="tab">💞 Love</button>
@@ -73,6 +74,15 @@
 
       <label for="from">Your name</label>
       <input id="from" maxlength="24" placeholder="e.g. Karthik">
+
+      <div id="pjExtras" hidden>
+        <label>Which Pooja?</label>
+        <div class="chips" id="pjModeChips"></div>
+        <div id="pjWorkWrap">
+          <label>What do they do? <span class="opt">(it sits on the altar)</span></label>
+          <div class="chips" id="pjWorkChips"></div>
+        </div>
+      </div>
 
       <div id="awExtras" hidden>
         <label>Which award? 😂</label>
@@ -111,9 +121,9 @@
       </div>
     </form>
 
-    <p class="note">Free · No app needed · Names and wishes stay inside the link — we don’t store them.<br>Made with ✨ by <a href="https://inixr.com" style="color:inherit">iNiXR</a></p>
+    <p class="note">Free · No app needed · First names show in the WhatsApp preview; your message stays inside the link. We don’t store either.<br>Made with ✨ by <a href="https://inixr.com" style="color:inherit">iNiXR</a></p>
   </main>
   <div class="toast" id="toast">Link copied!</div>
-  <script src="/static/wish/create.js?v=9"></script>
+  <script src="/static/wish/create.js?v=12"></script>
 </body>
 </html>

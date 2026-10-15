@@ -1,11 +1,25 @@
-// iNiXR AR Wish — creator page (Birthday + Thank-you).
-// The wish is packed into the link's #fragment, so names/messages never reach our server.
+// iNiXR AR Wish — creator page (Pooja, Birthday, Thank-you, Love, Awards).
+// The wish is packed into the link's #fragment, so the message never reaches our server.
+// Only the two short first names also go in the query (?f=&t=), so WhatsApp's preview can say
+// "Nithy sent you a Pooja gift, Gokul!". The server never stores them and strips them from its logs.
 (function () {
   var $ = function (id) { return document.getElementById(id); };
   var EVT_URL = document.body.dataset.evt;
-  var VIEW_URL = { bday: document.body.dataset.view, ty: document.body.dataset.thanks, rx: document.body.dataset.react, aw: document.body.dataset.award };
+  var VIEW_URL = { bday: document.body.dataset.view, ty: document.body.dataset.thanks, rx: document.body.dataset.react, aw: document.body.dataset.award, pj: document.body.dataset.pooja };
 
   var KINDS = {
+    pj: {
+      emoji: '🪔',
+      title: 'Send a 3D Pooja gift',
+      sub: 'A Pooja altar in their room — lamp, flowers, pori-kadalai and their work blessed with sandal & kumkum 🙏',
+      toLabel: 'Who is it for? (a name, or your group)',
+      msgLabel: 'Your Pooja wish',
+      waText: function (to, url, from) {
+        var greet = pjMode.key === 'sar' ? '📚 சரஸ்வதி பூஜை வாழ்த்துக்கள்! ' : '🪔 ஆயுத பூஜை வாழ்த்துக்கள்! ';
+        return greet + to + ', ' + (from || 'someone') + ' sent you a Pooja gift 🙏 Tap to light the lamp 👉 ' + url;
+      },
+      chips: [],
+    },
     bday: {
       emoji: '🎂',
       title: 'Send a 3D birthday wish',
@@ -181,11 +195,61 @@
     { key: 'custom', chip: '✍️ Your own title', emoji: '🏆', title: '', msgs: [
       ['English', 'You totally deserve this 😂🏆'], ['Tanglish', 'Indha award unakku thaan da 😂🏆'] ] },
   ];
+  // 🪔 Pooja (must match POOJA_MODES and WORKS in wish.js).
+  var POOJA_MODES = [
+    { key: 'ay', chip: '🔧 Ayudha Pooja' },
+    { key: 'sar', chip: '📚 Saraswathi Pooja', msgs: [
+      ['English', 'Happy Saraswathi Pooja! 📚 May Goddess Saraswathi bless you with wisdom and success 🙏'],
+      ['தமிழ்', 'சரஸ்வதி பூஜை நல்வாழ்த்துக்கள்! 📚 கல்வியும் ஞானமும் பெருகட்டும் 🙏'],
+      ['Tanglish', 'Saraswathi Pooja wishes! 📚 Books, laptop ellam pooja-la vachaachu 😄🙏'],
+      ['Both', 'ஆயுத பூஜை & சரஸ்வதி பூஜை நல்வாழ்த்துக்கள்! 🪔🙏 Happy Ayudha & Saraswathi Pooja!'],
+    ] },
+  ];
+  var WORKS = [
+    { key: 'car', chip: '🚗 Car / Bike', msgs: [
+      ['English', 'Happy Ayudha Pooja! 🚗 May your wheels roll safely and every journey be blessed 🙏'],
+      ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🚗 உங்கள் பயணங்கள் எல்லாம் பாதுகாப்பாக அமையட்டும் 🙏'],
+      ['Tanglish', 'Ayudha Pooja wishes! 🚗 Vandi wash pannita? Lemon ready ah? 😄🙏'],
+    ] },
+    { key: 'tools', chip: '🔧 Workshop / Tools', msgs: [
+      ['English', 'Happy Ayudha Pooja! 🔧 May your tools work hard and your hands stay blessed 🙏'],
+      ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🔧 உழைப்பு எல்லாம் உயர்வு தரட்டும் 🙏'],
+      ['Tanglish', 'Ayudha Pooja wishes! 🔧 Indha varusham ellam velai super-a nadakkattum 💪'],
+    ] },
+    { key: 'it', chip: '💻 IT / Office', msgs: [
+      ['English', 'Happy Ayudha Pooja! 💻 May your code compile first time and your bugs stay away 🙏'],
+      ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 💻 வேலையில் வெற்றி மேல் வெற்றி கிடைக்கட்டும் 🙏'],
+      ['Tanglish', 'Laptop-ku sandhanam kumkumam vachaachu! 💻 Indha varusham zero bugs 😄🙏'],
+    ] },
+    { key: 'factory', chip: '⚙️ Factory / Machines', msgs: [
+      ['English', 'Happy Ayudha Pooja! ⚙️ May the machines run smooth and production keep growing 🙏'],
+      ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! ⚙️ தொழில் மேன்மேலும் வளரட்டும் 🙏'],
+      ['Tanglish', 'Machine-ku pooja mudinjiduchu! ⚙️ Production double aagattum 😄'],
+    ] },
+    { key: 'shop', chip: '🛒 Shop / Business', msgs: [
+      ['English', 'Happy Ayudha Pooja! 🛒 May your business grow and your cash box overflow 🙏'],
+      ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🛒 வியாபாரம் செழிக்கட்டும் 🙏'],
+      ['Tanglish', 'Kadai la kallapetti full aagattum! 🛒💰 Ayudha Pooja wishes!'],
+    ] },
+    { key: 'farm', chip: '🚜 Farming', msgs: [
+      ['English', 'Happy Ayudha Pooja! 🌾 May the fields stay green and the harvest be rich 🙏'],
+      ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🌾 விளைச்சல் பெருகட்டும் 🙏'],
+      ['Tanglish', 'Indha varusham vivasayam semma-va irukkattum! 🌾🚜'],
+    ] },
+    { key: 'student', chip: '📚 Student', msgs: [
+      ['English', 'Happy Pooja! 📚 May every exam be easy and every answer right 🙏'],
+      ['தமிழ்', 'சரஸ்வதி பூஜை வாழ்த்துக்கள்! 📚 கல்வியில் சிறந்து விளங்க வாழ்த்துக்கள் 🙏'],
+      ['Tanglish', 'Books-ku pooja pannita, ini exam easy thaan 😄📚'],
+    ] },
+  ];
+  var POOJA_FUN = ['Fun', 'Pooja holiday: 3 days off, 0 plans, 100% sundal 😂🪔'];
+  var pjMode = POOJA_MODES[0], pjWork = WORKS[0];
   var item = ITEMS[0], rel = '', autoMsg = '', react = REACTS[0], award = AWARDS[0];
 
   var hash = new URLSearchParams(location.hash.slice(1));
   var ref = /^[a-z0-9]{1,12}$/.test(hash.get('r') || '') ? hash.get('r') : '';
-  var kind = ['ty', 'rx', 'aw'].indexOf(hash.get('k')) >= 0 ? hash.get('k') : 'bday';
+  var SEASON_KIND = Date.now() < Date.parse('2026-10-23T00:00:00+05:30') ? 'pj' : 'bday';
+  var kind = ['ty', 'rx', 'aw', 'pj', 'bday'].indexOf(hash.get('k')) >= 0 ? hash.get('k') : SEASON_KIND;
   if (hash.get('f')) $('from').value = hash.get('f').slice(0, 24);
   if (hash.get('t')) $('to').value = hash.get('t').slice(0, 24);
   history.replaceState(null, '', location.pathname);
@@ -224,6 +288,9 @@
     $('tyExtras').hidden = k !== 'ty';
     $('rxExtras').hidden = k !== 'rx';
     $('awExtras').hidden = k !== 'aw';
+    $('pjExtras').hidden = k !== 'pj';
+    $('pjWorkWrap').hidden = pjMode.key !== 'ay';
+    if (k === 'pj' && !$('msg').value) setAutoMsg(msgChips()[0][1]);
     renderMsgChips();
     // Replying with a thank-you: start from a ready message so it takes one tap.
     if (k === 'ty' && ref && !$('msg').value) setAutoMsg(K.chips[0][1]);
@@ -233,6 +300,7 @@
   }
 
   function msgChips() {
+    if (kind === 'pj') return (pjMode.key === 'sar' ? pjMode.msgs : pjWork.msgs).concat([POOJA_FUN]);
     if (kind === 'rx') return react.msgs;
     if (kind === 'aw') return award.msgs;
     return kind === 'ty' && item.msgs ? item.msgs : KINDS[kind].chips;
@@ -290,6 +358,21 @@
       renderMsgChips();
       renderPickers();
     });
+    pickChips($('pjModeChips'), POOJA_MODES, function (m) { return m === pjMode; }, function (m) {
+      pjMode = m;
+      $('pjWorkWrap').hidden = m.key !== 'ay';
+      var msg = $('msg').value.trim();
+      if (!msg || msg === autoMsg) setAutoMsg(msgChips()[0][1]);
+      renderMsgChips();
+      renderPickers();
+    });
+    pickChips($('pjWorkChips'), WORKS, function (w) { return w === pjWork; }, function (w) {
+      pjWork = w;
+      var msg = $('msg').value.trim();
+      if (!msg || msg === autoMsg) setAutoMsg(msgChips()[0][1]);
+      renderMsgChips();
+      renderPickers();
+    });
     pickChips($('relChips'), RELS, function (r) { return r[0] === rel; }, function (r) {
       rel = rel === r[0] ? '' : r[0];
       renderPickers();
@@ -328,11 +411,12 @@
     var msg = $('msg').value.trim();
     $('err').textContent = '';
     if (!to) {
-      $('err').textContent = kind === 'ty' ? 'Please enter who you want to thank 🙂' : 'Please enter the birthday person’s name 🙂';
+      $('err').textContent = kind === 'ty' ? 'Please enter who you want to thank 🙂'
+        : kind === 'bday' ? 'Please enter the birthday person’s name 🙂' : 'Please enter who it is for 🙂';
       $('to').focus();
       return null;
     }
-    var key = [kind, to, from, msg, item.key, rel, react.key, award.key, $('customTitle').value].join('|');
+    var key = [kind, to, from, msg, item.key, rel, react.key, award.key, $('customTitle').value, pjMode.key, pjWork.key].join('|');
     if (key !== current.key) current = { key: key, id: newId(), tracked: false };
     if (!current.tracked) { track('link_created', current.id); current.tracked = true; }
     var data = { k: kind, t: to, f: from, m: msg, i: current.id };
@@ -348,7 +432,20 @@
       data.a = award.key;
       if (award.key === 'custom') data.c = $('customTitle').value.trim().slice(0, 28);
     }
-    return { to: to, from: from, url: VIEW_URL[kind] + '#d=' + b64url(JSON.stringify(data)) };
+    if (kind === 'pj') {
+      data.s = pjMode.key;
+      if (pjMode.key === 'ay') data.w = pjWork.key;
+    }
+    return { to: to, from: from, url: VIEW_URL[kind] + namesQuery(from, to) + '#d=' + b64url(JSON.stringify(data)) };
+  }
+
+  // Short first names for the WhatsApp preview ("Nithy sent you a Pooja gift, Gokul!").
+  function namesQuery(from, to) {
+    if (!from || !to) return '';
+    var q = new URLSearchParams();
+    q.set('f', from.slice(0, 24));
+    q.set('t', to.slice(0, 24));
+    return '?' + q.toString();
   }
 
   $('waBtn').addEventListener('click', function () {

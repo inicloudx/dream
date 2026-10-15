@@ -48,16 +48,29 @@ New services go in `services/<name>/`, each with its own `package.json` and `Doc
 
 ## Viewer routes
 
-`/` birthday · `/thanks/` · `/r/` reactions · `/award/` · `/create/` · `/e/` event beacon (POST) ·
+`/` birthday · `/thanks/` · `/r/` reactions · `/award/` · `/pooja/` · `/create/` · `/e/` event beacon (POST) ·
 `/stats/` (Basic auth, user `admin`, password from `STATS_PASSWORD`) · `/health` · `/static/...`
 
 ## Rules carried over from the Django app
 
-- Names and messages live only in the link's `#fragment` and are never stored. The server keeps
-  anonymous event counts only (`wish_events`), same event names as the old `WishEvent` model.
+- The message lives only in the link's `#fragment`. Since October 2026 (owner's decision) the two short first
+  names are **also** in the query (`?f=Nithy&t=Gokul`) so the WhatsApp preview can say "Nithy sent you a Pooja
+  gift, Gokul!". The server never stores them: Fastify's request log and the OpenTelemetry span record the path
+  only, and pages send `Referrer-Policy: origin`. Keep it that way for any new route. The server keeps anonymous
+  event counts only (`wish_events`), same event names as the old `WishEvent` model.
 - Phones cache static files for 30 days: when `wish.js`, `create.js` or `wish.css` change, bump the
   `?v=N` in `services/viewer/templates/view.html` and `create.html`.
 - `?me=1` once per phone stops that phone being counted (handled in the browser).
+- Static file version is currently `?v=12`.
+
+## Pooja gift (kind `pj`, added 2026-10-15)
+
+- Data in the fragment: `s` = `ay` (Ayudha) or `sar` (Saraswathi); `w` = work for Ayudha: `car`, `tools`, `it`,
+  `factory`, `shop`, `farm`, `student`. Must match `POOJA_MODES`/`WORKS` in `wish.js` and `create.js`.
+- Saraswathi is shown through her symbols only (veena, books + laptop, lotus, white swan), never as a figure.
+- Text is English + Tamil. Funny Pooja replies (`sundal`, `bikewash`, `laptop`, `pori`, `sweets`) are reactions
+  (`rx`) reusing existing emoji faces.
+- The creator opens on the Pooja tab until 23 Oct 2026 (`SEASON_KIND` in `create.js`), then Birthday again.
 
 ## Commands
 

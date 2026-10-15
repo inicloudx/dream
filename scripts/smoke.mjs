@@ -17,33 +17,43 @@ const pages = {
   '/thanks/': 'special thank-you',
   '/r/': 'special reaction',
   '/award/': 'the award goes to',
+  '/pooja/': 'A Pooja gift is waiting',
 };
 for (const [path, title] of Object.entries(pages)) {
   const res = await fetch(BASE + path);
   const html = await res.text();
   assert.equal(res.status, 200, path);
   assert.ok(html.includes(title), `${path} has its WhatsApp preview title`);
-  assert.ok(/property="og:image" content="https?:\/\/[^"]+\/static\/wish\/og[a-z_]*\.png"/.test(html), `${path} og:image is absolute`);
+  assert.ok(/property="og:image" content="https?:\/\/[^"]+\/static\/wish\/og[a-z_]*\.(png|jpg)"/.test(html), `${path} og:image is absolute`);
   assert.ok(html.includes('data-evt="/e/"'), `${path} posts events to /e/`);
   assert.ok(!html.includes('{{') && !html.includes('{%'), `${path} has no unfilled template tags`);
 }
 assert.equal((await fetch(`${BASE}/thanks`)).status, 200);
-step('four gift pages render with the right WhatsApp previews (with and without trailing slash)');
+step('five gift pages render with the right WhatsApp previews (with and without trailing slash)');
+
+const named = await (await fetch(`${BASE}/pooja/?f=Nithy&t=Gokul`)).text();
+assert.ok(named.includes('🪔 Nithy sent you a Pooja gift, Gokul!'), 'named preview');
+assert.ok(named.includes('property="og:url" content="') && !/og:url" content="[^"]*Nithy/.test(named), 'names kept out of og:url');
+const award = await (await fetch(`${BASE}/award/?f=Nithy&t=Gokul`)).text();
+assert.ok(award.includes('🏆 Nithy gives a special award to Gokul! 😂'));
+const sneaky = await (await fetch(`${BASE}/pooja/?f=%3Cb%3EX&t=Y`)).text();
+assert.ok(!sneaky.includes('<b>X'), 'names are escaped');
+step('previews name the sender and receiver from the link, escaped, and keep names out of og:url');
 
 const create = await (await fetch(`${BASE}/create/`)).text();
 assert.ok(/data-thanks="https?:\/\/[^"]+\/thanks\/"/.test(create));
 assert.ok(create.includes('/static/wish/create.js'));
 step('creator page renders with absolute links for each gift type');
 
-for (const file of ['wish.js', 'create.js', 'wish.css', 'og.png', 'og_thanks.png', 'og_react.png', 'og_award.png']) {
+for (const file of ['wish.js', 'create.js', 'wish.css', 'og.png', 'og_thanks.png', 'og_react.png', 'og_award.png', 'og_pooja.jpg']) {
   const res = await fetch(`${BASE}/static/wish/${file}`);
   assert.equal(res.status, 200, file);
   assert.match(res.headers.get('cache-control') ?? '', /max-age=2592000/, `${file} cached 30 days`);
 }
 assert.equal((await fetch(`${BASE}/favicon.ico`)).status, 200);
 const wishJs = await (await fetch(`${BASE}/static/wish/wish.js`)).text();
-assert.ok(wishJs.includes('wish.inixr.com/create/') && !wishJs.includes('inixr.com/wish'));
-step('static files served with 30-day caching; shared links point to wish.inixr.com');
+assert.ok(wishJs.includes('dream.inixr.com/create/') && !wishJs.includes('inixr.com/wish'));
+step('static files served with 30-day caching; shared links point to dream.inixr.com');
 
 const beacon = (body, type = 'text/plain;charset=UTF-8') =>
   fetch(`${BASE}/e/`, { method: 'POST', headers: { 'Content-Type': type }, body });

@@ -6,19 +6,39 @@ import { join } from 'node:path';
 import { config } from './config.js';
 import { migrate, pool } from './db.js';
 import { KINDS, parseEvent } from './events.js';
-import { renderCreate, renderView, VIEW_PATHS } from './pages.js';
+import { cleanName, renderCreate, renderView, VIEW_PATHS } from './pages.js';
 import { renderStats } from './stats.js';
 
 // trustProxy: Azure terminates HTTPS in front of the container and forwards the original scheme and host.
-const app = Fastify({ logger: true, trustProxy: true, routerOptions: { ignoreTrailingSlash: true }, bodyLimit: 4096 });
+// Gift links may carry short first names in the query (?f=&t=) for the WhatsApp preview.
+// They must not end up in logs or monitoring, so only the path is ever recorded.
+const pathOnly = (url: string) => url.split('?')[0];
+
+const app = Fastify({
+  logger: {
+    serializers: {
+      req: (req) => ({ method: req.method, url: pathOnly(req.url), remoteAddress: req.ip }),
+    },
+  },
+  trustProxy: true,
+  routerOptions: { ignoreTrailingSlash: true },
+  bodyLimit: 4096,
+});
 
 // Name each request by its route ("GET /thanks/") so Application Insights groups them usefully.
+// Also overwrite the request address on the trace without its query, so names never reach Application Insights.
 app.addHook('onRequest', async (req) => {
+  const span = trace.getActiveSpan();
+  if (!span) return;
+  const path = pathOnly(req.url);
+  span.setAttribute('url.full', `${req.protocol}://${req.host}${path}`);
+  span.setAttribute('http.url', `${req.protocol}://${req.host}${path}`);
+  span.setAttribute('http.target', path);
+  span.setAttribute('url.query', '');
   const route = req.routeOptions.url;
   if (!route) return;
-  const span = trace.getActiveSpan();
-  span?.updateName(`${req.method} ${route}`);
-  span?.setAttribute('http.route', route);
+  span.updateName(`${req.method} ${route}`);
+  span.setAttribute('http.route', route);
 });
 
 // Phones keep static files for 30 days; pages bump ?v=N in their links when a file changes.
@@ -32,9 +52,15 @@ app.get('/favicon.ico', (_req, reply) => reply.sendFile('favicon.ico'));
 const baseUrl = (req: FastifyRequest) => `${req.protocol}://${req.host}`;
 
 for (const kind of KINDS) {
-  app.get(VIEW_PATHS[kind], (req, reply) =>
-    reply.header('Cache-Control', 'no-cache').type('text/html; charset=utf-8').send(renderView(kind, baseUrl(req))),
-  );
+  app.get<{ Querystring: { f?: string; t?: string } }>(VIEW_PATHS[kind], (req, reply) => {
+    const names = { from: cleanName(req.query.f), to: cleanName(req.query.t) };
+    return reply
+      .header('Cache-Control', 'no-cache')
+      // Keep the names out of other sites' logs too when someone follows a link from this page.
+      .header('Referrer-Policy', 'origin')
+      .type('text/html; charset=utf-8')
+      .send(renderView(kind, baseUrl(req), names));
+  });
 }
 app.get('/create/', (req, reply) =>
   reply.header('Cache-Control', 'no-cache').type('text/html; charset=utf-8').send(renderCreate(baseUrl(req))),

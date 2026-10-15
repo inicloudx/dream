@@ -27,7 +27,7 @@ export const EVENTS: [string, string][] = [
   ['copy', 'Copied link'],
 ];
 
-export const KINDS = ['bday', 'ty', 'rx', 'aw'] as const;
+export const KINDS = ['bday', 'ty', 'rx', 'aw', 'pj'] as const;
 export type Kind = (typeof KINDS)[number];
 
 const EVENT_NAMES = new Set(EVENTS.map(([name]) => name));

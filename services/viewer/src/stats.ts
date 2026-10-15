@@ -141,7 +141,7 @@ export async function renderStats(query: { p?: string; since?: string }): Promis
     </form>
   </div>
   <p class="note">${since ? `Showing activity since ${fmt(since, { day: 'numeric', month: 'short', year: 'numeric' })}.` : 'Showing all activity.'}
-    Your own phone isn’t counted after you open <code>wish.inixr.com/?me=1</code> once.</p>
+    Your own phone isn’t counted after you open <code>dream.inixr.com/?me=1</code> once.</p>
 
   <div class="kpi">
     <div><b>${opened.size}</b>gifts opened</div>
@@ -161,12 +161,12 @@ export async function renderStats(query: { p?: string; since?: string }): Promis
 
   <h2>🔍 Each step, by gift type</h2>
   <table>
-    <thead><tr><th>Step</th><th class="n">🎂</th><th class="n">💖</th><th class="n">💞</th><th class="n">🏆</th></tr></thead>
+    <thead><tr><th>Step</th><th class="n">🎂</th><th class="n">💖</th><th class="n">💞</th><th class="n">🏆</th><th class="n">🪔</th></tr></thead>
     <tbody>
       ${stepRows}
     </tbody>
   </table>
-  <p><small>🎂 Birthday · 💖 Thank you · 💞 Reaction · 🏆 Award. “Creator opened” is counted under the tab the page starts on.
+  <p><small>🎂 Birthday · 💖 Thank you · 💞 Reaction · 🏆 Award · 🪔 Pooja. “Creator opened” is counted under the tab the page starts on.
     Anonymous counts only — no names or messages are stored. Target reply rate: above 15–20%.</small></p>
 </body>
 </html>`;
