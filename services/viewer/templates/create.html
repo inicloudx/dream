@@ -15,7 +15,14 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/wish/wish.css?v=13">
+  <link rel="stylesheet" href="/static/wish/wish.css?v=15">
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js"
+    }
+  }
+  </script>
   <style>
     html { overflow-y: auto; height: auto; }
     body { overflow: visible; height: auto; min-height: 100%; overscroll-behavior: auto; }
@@ -51,6 +58,23 @@
     .note { font-size: 0.8rem; color: var(--muted); text-align: center; margin-top: 18px; line-height: 1.4; }
     .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: #fff; color: #222; font-weight: 700; padding: 0.6em 1.2em; border-radius: 999px; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
     .toast.show { opacity: 1; }
+    /* Live 3D teaser: a gift opening "in a room", framed like a camera viewfinder. */
+    .teaser { position: relative; display: block; width: 100%; height: 230px; margin: 0 auto 10px; padding: 0; border-radius: 22px; overflow: hidden; cursor: pointer;
+      background: radial-gradient(120% 90% at 50% 105%, rgba(255, 190, 110, 0.28), transparent 62%), linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02));
+      border: 1px solid var(--glass-line); }
+    .teaser:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+    .teaser canvas { width: 100%; height: 100%; display: block; }
+    .teaser .corner { position: absolute; width: 22px; height: 22px; border: 3px solid rgba(255, 255, 255, 0.8); pointer-events: none; }
+    .teaser .c-tl { top: 12px; left: 12px; border-right: 0; border-bottom: 0; border-radius: 8px 0 0 0; }
+    .teaser .c-tr { top: 12px; right: 12px; border-left: 0; border-bottom: 0; border-radius: 0 8px 0 0; }
+    .teaser .c-bl { bottom: 12px; left: 12px; border-right: 0; border-top: 0; border-radius: 0 0 0 8px; }
+    .teaser .c-br { bottom: 12px; right: 12px; border-left: 0; border-top: 0; border-radius: 0 0 8px 0; }
+    .teaser .scan { position: absolute; left: 12%; right: 12%; height: 2px; top: 20%; pointer-events: none; opacity: 0.7;
+      background: linear-gradient(90deg, transparent, #7af0ff, transparent); box-shadow: 0 0 12px #7af0ff; animation: scan 3.4s ease-in-out infinite; }
+    @keyframes scan { 0%, 100% { top: 18%; } 50% { top: 82%; } }
+    .teaser-tag { position: absolute; left: 50%; bottom: 14px; transform: translateX(-50%); white-space: nowrap; pointer-events: none;
+      font-size: 0.8rem; font-weight: 800; color: #fff; background: rgba(20, 8, 32, 0.62); padding: 0.32em 0.9em; border-radius: 999px; }
+    @media (prefers-reduced-motion: reduce) { .teaser .scan { display: none; } }
   </style>
 </head>
 <body data-evt="/e/" data-view="{{ view_url }}" data-thanks="{{ thanks_url }}" data-react="{{ react_url }}" data-award="{{ award_url }}" data-pooja="{{ pooja_url }}">
@@ -62,6 +86,12 @@
       <button type="button" class="kind" data-kind="rx" role="tab">💞 Love</button>
       <button type="button" class="kind" data-kind="aw" role="tab">🏆 Awards</button>
     </div>
+    <button type="button" class="teaser" id="teaser" hidden aria-label="Try this gift yourself in your room">
+      <canvas></canvas>
+      <span class="corner c-tl"></span><span class="corner c-tr"></span><span class="corner c-bl"></span><span class="corner c-br"></span>
+      <span class="scan"></span>
+      <span class="teaser-tag">📷 Appears in their room · tap to try</span>
+    </button>
     <header class="hero">
       <div class="emoji" id="heroEmoji" aria-hidden="true">🎂</div>
       <h1 id="heroTitle">Send a 3D birthday wish</h1>
@@ -124,6 +154,7 @@
     <p class="note">Free · No app needed · First names show in the WhatsApp preview; your message stays inside the link. We don’t store either.<br>Made with ✨ by <a href="https://inixr.com" style="color:inherit">iNiXR</a></p>
   </main>
   <div class="toast" id="toast">Link copied!</div>
-  <script src="/static/wish/create.js?v=13"></script>
+  <script src="/static/wish/create.js?v=15"></script>
+  <script type="module" src="/static/wish/teaser.js?v=15"></script>
 </body>
 </html>

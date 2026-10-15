@@ -61,7 +61,7 @@ New services go in `services/<name>/`, each with its own `package.json` and `Doc
 - Phones cache static files for 30 days: when `wish.js`, `create.js` or `wish.css` change, bump the
   `?v=N` in `services/viewer/templates/view.html` and `create.html`.
 - `?me=1` once per phone stops that phone being counted (handled in the browser).
-- Static file version is currently `?v=12`.
+- Static file version is currently `?v=15`. `teaser.js` is the 3D gift-opening teaser on the creator page.
 
 ## Pooja gift (kind `pj`, added 2026-10-15)
 

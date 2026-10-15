@@ -285,6 +285,7 @@
     $('msgLabel').textContent = K.msgLabel;
     document.title = K.title + ' ' + K.emoji;
     document.querySelectorAll('.kind').forEach(function (b) { b.classList.toggle('active', b.dataset.kind === k); });
+    document.dispatchEvent(new CustomEvent('wish:kind', { detail: k }));   // the 3D teaser follows the tab
     $('tyExtras').hidden = k !== 'ty';
     $('rxExtras').hidden = k !== 'rx';
     $('awExtras').hidden = k !== 'aw';
@@ -447,6 +448,20 @@
     q.set('t', to.slice(0, 24));
     return '?' + q.toString();
   }
+
+  // Tap the 3D teaser: open the real experience as an uncounted preview, using what's typed so far.
+  function kindExtras(data) {
+    if (kind === 'ty') { if (item.key !== 'heart') data.o = item.key; if (rel) data.l = rel; }
+    if (kind === 'rx') data.x = react.key;
+    if (kind === 'aw') { data.a = award.key; if (award.key === 'custom') data.c = $('customTitle').value.trim().slice(0, 28); }
+    if (kind === 'pj') { data.s = pjMode.key; if (pjMode.key === 'ay') data.w = pjWork.key; }
+    return data;
+  }
+  $('teaser').addEventListener('click', function () {
+    var data = kindExtras({ k: kind, t: $('to').value.trim() || 'You', f: $('from').value.trim() || 'Your friend', m: $('msg').value.trim(), i: '' });
+    var url = VIEW_URL[kind] + '#d=' + b64url(JSON.stringify(data)) + '&p=1';
+    if (!window.open(url, '_blank')) location.href = url;
+  });
 
   $('waBtn').addEventListener('click', function () {
     var l = buildLink();
