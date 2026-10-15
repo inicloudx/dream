@@ -2690,7 +2690,7 @@ function paintFrame(ctx, w, h) {
   ctx.drawImage(renderer.domElement, 0, 0, w, h);
   // Watermark pill — every shared photo/video points back to the creator.
   const s = w / 420;
-  const label = `${IS_PJ ? '🪔' : IS_AW ? '🏆' : IS_RX ? REACT.emoji : IS_TY ? '💖' : '🎂'} Make yours free · dream.inixr.com`;
+  const label = `${IS_PJ ? '🪔' : IS_AW ? '🏆' : IS_RX ? REACT.emoji : IS_TY ? '💖' : '🎂'} Send yours free · dream.inixr.com`;
   ctx.font = `800 ${Math.round(15 * s)}px ${FONT}`;
   const tw = ctx.measureText(label).width;
   const ph = 34 * s, pw = tw + 30 * s, px = (w - pw) / 2, py = h - ph - 22 * s;

@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#1a0b2e">
   <title>{{ page_title }}</title>
+  <script>
+    // The home address with no gift in the link opens the creator. Gift links (/#d=…) open as before.
+    if (location.pathname === '/' && !/(^|[#&])d=/.test(location.hash)) location.replace('/create/' + location.search);
+  </script>
   <meta name="description" content="{{ og_desc }}">
   <meta property="og:type" content="website">
   <meta property="og:title" content="{{ og_title }}">
@@ -18,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/wish/wish.css?v=12">
+  <link rel="stylesheet" href="/static/wish/wish.css?v=13">
   <script type="importmap">
   {
     "imports": {
@@ -33,7 +37,7 @@
   <div id="stage"></div>
   <div id="flash" class="flash"></div>
 
-  <a id="brand" class="brand" href="/create/">✨ Make your own AR wish</a>
+  <a id="brand" class="brand" href="/create/">🎁 Gift your favourite person</a>
   <button id="mute" class="icon-btn" aria-label="Sound on/off" hidden>🔊</button>
 
   <!-- Camera / capture tools -->
@@ -93,7 +97,7 @@
       <button id="selfieBtn" class="pill-btn">🤳 Selfie with it</button>
       <button id="replayBtn" class="pill-btn">🔁 Replay</button>
     </div>
-    <a class="make-own-btn" id="makeOwn" href="/create/">✨ Make your own AR wish — it’s free</a>
+    <a class="make-own-btn" id="makeOwn" href="/create/">🎁 Send a gift to your favourite person — it’s free</a>
   </section>
 
   <!-- 4. Photo preview -->
@@ -125,6 +129,6 @@
 
   <div id="toast" class="toast"></div>
   <noscript><p class="noscript">Please enable JavaScript to open your gift.</p></noscript>
-  <script type="module" src="/static/wish/wish.js?v=12"></script>
+  <script type="module" src="/static/wish/wish.js?v=13"></script>
 </body>
 </html>

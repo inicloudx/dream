@@ -81,9 +81,9 @@ button { font-family: inherit; cursor: pointer; border: 0; }
 }
 
 .brand {
-  position: fixed; left: 50%; top: max(14px, env(safe-area-inset-top));
-  transform: translateX(-50%);
-  white-space: nowrap;
+  position: fixed; left: 14px; top: max(14px, env(safe-area-inset-top));
+  max-width: calc(100% - 90px);              /* never under the sound button */
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
   background: rgba(20, 8, 32, 0.55);
   border: 1px solid rgba(255, 255, 255, 0.3);
   color: var(--ink);
