@@ -236,6 +236,31 @@
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🌾 விளைச்சல் பெருகட்டும் 🙏'],
       ['Tanglish', 'Indha varusham vivasayam semma-va irukkattum! 🌾🚜'],
     ] },
+    { key: 'bank', chip: '🏦 Banking', msgs: [
+      ['English', 'Happy Ayudha Pooja! 🏦 May every account balance and every audit pass smoothly 🙏'],
+      ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🏦 செல்வமும் வளமும் பெருகட்டும் 🙏'],
+      ['Tanglish', 'Cash counter-ku pooja pannachu! 🏦 Indha varusham balance always tally 😄🙏'],
+    ] },
+    { key: 'law', chip: '⚖️ Lawyer', msgs: [
+      ['English', 'Happy Ayudha Pooja! ⚖️ May every case go your way and justice always win 🙏'],
+      ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! ⚖️ நீதியும் வெற்றியும் உங்கள் பக்கம் 🙏'],
+      ['Tanglish', 'Objection overruled! ⚖️ Indha varusham ellam case-um win thaan 😄🙏'],
+    ] },
+    { key: 'doctor', chip: '🩺 Doctor / Nurse', msgs: [
+      ['English', 'Happy Ayudha Pooja! 🩺 Blessings to the hands that heal everyone 🙏'],
+      ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🩺 உங்கள் கைகள் எல்லோருக்கும் நலம் தரட்டும் 🙏'],
+      ['Tanglish', 'Stethoscope-ku sandhanam kumkumam! 🩺 Ellarum healthy-a irukkattum 😄🙏'],
+    ] },
+    { key: 'teacher', chip: '👩‍🏫 Teacher', msgs: [
+      ['English', 'Happy Pooja! 👩‍🏫 Thank you for lighting up young minds every day 🙏'],
+      ['தமிழ்', 'பூஜை வாழ்த்துக்கள்! 👩‍🏫 அறிவு விளக்கை ஏற்றும் ஆசிரியருக்கு வணக்கம் 🙏'],
+      ['Tanglish', 'Chalk-ku, board-ku, red pen-ku ellam pooja! 👩‍🏫 Students ellam pass aagattum 😄'],
+    ] },
+    { key: 'home', chip: '🏠 Home / Kitchen', msgs: [
+      ['English', 'Happy Ayudha Pooja! 🏠 To the mixie, the cooker and the real hero who runs the home 🙏'],
+      ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🏠 வீட்டில் எப்போதும் மகிழ்ச்சி நிறையட்டும் 🙏'],
+      ['Tanglish', 'Mixie-kum cooker-kum pooja mudinjiduchu! 🏠 Innaiku samayal leave thaan 😄'],
+    ] },
     { key: 'student', chip: '📚 Student', msgs: [
       ['English', 'Happy Pooja! 📚 May every exam be easy and every answer right 🙏'],
       ['தமிழ்', 'சரஸ்வதி பூஜை வாழ்த்துக்கள்! 📚 கல்வியில் சிறந்து விளங்க வாழ்த்துக்கள் 🙏'],
@@ -243,6 +268,32 @@
     ] },
   ];
   var POOJA_FUN = ['Fun', 'Pooja holiday: 3 days off, 0 plans, 100% sundal 😂🪔'];
+  // ⚡ Quick share: no names at all, so one link can go to many people at once.
+  var QUICK_TEXT = {
+    pj: function (url) {
+      var greet = pjMode.key === 'sar' ? '📚 சரஸ்வதி பூஜை வாழ்த்துக்கள்! ' : '🪔 ஆயுத பூஜை வாழ்த்துக்கள்! ';
+      return greet + 'I hid a little Pooja surprise for you inside this link ✨ Tap to light the lamp 👉 ' + url;
+    },
+    bday: function (url) { return '🎂 A birthday surprise is hiding in this link… just for you! Tap to open 👉 ' + url; },
+    rx: function (url) { return react.emoji + ' Someone ' + react.verb + '! Tap to see it pop up in 3D 👉 ' + url; },
+    aw: function (url) { return '🏆 BREAKING NEWS 😂 You have won the ' + awardTitle() + ' AWARD! Watch the ceremony 👉 ' + url; },
+    ty: function (url) { return '💖 I made you a little thank-you surprise. Tap to open 👉 ' + url; },
+  };
+  var quick = null;   // null = follow the tab's default (quick for Pooja & Love, names for the rest)
+  function isQuick() { return quick === null ? kind === 'pj' || kind === 'rx' : quick; }
+  function renderNameMode() {
+    var q = isQuick();
+    $('modeQuick').classList.toggle('on', q);
+    $('modeNamed').classList.toggle('on', !q);
+    $('modeQuick').setAttribute('aria-pressed', String(q));
+    $('modeNamed').setAttribute('aria-pressed', String(!q));
+    $('namesWrap').hidden = q;
+    $('quickTip').hidden = !q;
+    $('waBtn').textContent = q ? 'Send on WhatsApp · pick many chats' : 'Send on WhatsApp';
+    $('err').textContent = '';
+  }
+  $('modeQuick').addEventListener('click', function () { quick = true; renderNameMode(); });
+  $('modeNamed').addEventListener('click', function () { quick = false; renderNameMode(); $('to').focus(); });
   var pjMode = POOJA_MODES[0], pjWork = WORKS[0];
   var item = ITEMS[0], rel = '', autoMsg = '', react = REACTS[0], award = AWARDS[0];
 
@@ -251,7 +302,7 @@
   var SEASON_KIND = Date.now() < Date.parse('2026-10-23T00:00:00+05:30') ? 'pj' : 'bday';
   var kind = ['ty', 'rx', 'aw', 'pj', 'bday'].indexOf(hash.get('k')) >= 0 ? hash.get('k') : SEASON_KIND;
   if (hash.get('f')) $('from').value = hash.get('f').slice(0, 24);
-  if (hash.get('t')) $('to').value = hash.get('t').slice(0, 24);
+  if (hash.get('t')) { $('to').value = hash.get('t').slice(0, 24); quick = false; }
   history.replaceState(null, '', location.pathname);
 
   // Owner's own phone: ?me=1 once stops counting it (?me=0 to undo).
@@ -298,6 +349,7 @@
     if (k === 'aw' && !$('msg').value) setAutoMsg(award.msgs[0][1]);
     var m = $('msg').value.trim();
     if (m && m === autoMsg && msgChips().length) setAutoMsg(msgChips()[0][1]);
+    renderNameMode();
   }
 
   function msgChips() {
@@ -407,20 +459,23 @@
   }
 
   function buildLink() {
-    var to = $('to').value.trim();
-    var from = $('from').value.trim();
+    var q = isQuick();
+    var to = q ? '' : $('to').value.trim();
+    var from = q ? '' : $('from').value.trim();
     var msg = $('msg').value.trim();
     $('err').textContent = '';
-    if (!to) {
+    if (!q && !to) {
       $('err').textContent = kind === 'ty' ? 'Please enter who you want to thank 🙂'
         : kind === 'bday' ? 'Please enter the birthday person’s name 🙂' : 'Please enter who it is for 🙂';
       $('to').focus();
       return null;
     }
-    var key = [kind, to, from, msg, item.key, rel, react.key, award.key, $('customTitle').value, pjMode.key, pjWork.key].join('|');
+    var key = [kind, q, to, from, msg, item.key, rel, react.key, award.key, $('customTitle').value, pjMode.key, pjWork.key].join('|');
     if (key !== current.key) current = { key: key, id: newId(), tracked: false };
     if (!current.tracked) { track('link_created', current.id); current.tracked = true; }
-    var data = { k: kind, t: to, f: from, m: msg, i: current.id };
+    var data = { k: kind, m: msg, i: current.id };
+    if (to) data.t = to;
+    if (from) data.f = from;
     if (kind === 'ty') {
       if (item.key !== 'heart') data.o = item.key;
       if (rel) data.l = rel;
@@ -437,7 +492,7 @@
       data.s = pjMode.key;
       if (pjMode.key === 'ay') data.w = pjWork.key;
     }
-    return { to: to, from: from, url: VIEW_URL[kind] + namesQuery(from, to) + '#d=' + b64url(JSON.stringify(data)) };
+    return { to: to, from: from, quick: q, url: VIEW_URL[kind] + namesQuery(from, to) + '#d=' + b64url(JSON.stringify(data)) };
   }
 
   // Short first names for the WhatsApp preview ("Nithy sent you a Pooja gift, Gokul!").
@@ -458,7 +513,8 @@
     return data;
   }
   $('teaser').addEventListener('click', function () {
-    var data = kindExtras({ k: kind, t: $('to').value.trim() || 'You', f: $('from').value.trim() || 'Your friend', m: $('msg').value.trim(), i: '' });
+    var data = kindExtras(isQuick() ? { k: kind, m: $('msg').value.trim(), i: '' }
+      : { k: kind, t: $('to').value.trim() || 'You', f: $('from').value.trim() || 'Your friend', m: $('msg').value.trim(), i: '' });
     var url = VIEW_URL[kind] + '#d=' + b64url(JSON.stringify(data)) + '&p=1';
     if (!window.open(url, '_blank')) location.href = url;
   });
@@ -467,9 +523,22 @@
     var l = buildLink();
     if (!l) return;
     track('wa_share', current.id);
-    var wa = 'https://wa.me/?text=' + encodeURIComponent(KINDS[kind].waText(l.to, l.url, l.from));
+    var wa = 'https://wa.me/?text=' + encodeURIComponent(shareText(l));
     if (!window.open(wa, '_blank')) location.href = wa;
   });
+
+  function shareText(l) { return l.quick ? QUICK_TEXT[kind](l.url) : KINDS[kind].waText(l.to, l.url, l.from); }
+
+  // 📤 The phone's own share sheet: Instagram, Telegram, WhatsApp Status, SMS…
+  if (navigator.share) {
+    $('shareBtn').hidden = false;
+    $('shareBtn').addEventListener('click', function () {
+      var l = buildLink();
+      if (!l) return;
+      track('share', current.id);
+      navigator.share({ text: shareText(l) }).catch(function () { /* closed the sheet */ });
+    });
+  }
 
   $('previewBtn').addEventListener('click', function () {
     var l = buildLink();

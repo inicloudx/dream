@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/wish/wish.css?v=15">
+  <link rel="stylesheet" href="/static/wish/wish.css?v=16">
   <script type="importmap">
   {
     "imports": {
@@ -50,6 +50,14 @@
     <button class="tool rec" id="recBtn" aria-label="Record video"><span>🎥</span><b id="recLabel">Video</b></button>
   </nav>
   <p id="arTip" class="ar-tip" hidden></p>
+  <div id="roomInvite" class="room-invite" role="dialog" aria-label="See it in your room" hidden>
+    <p class="ri-title">✨ Want it in your room?</p>
+    <p class="ri-sub">Uses your camera live, only on this phone. Nothing is recorded or sent.</p>
+    <div class="ri-row">
+      <button id="roomGo" class="ri-go">📷 Yes, show me</button>
+      <button id="roomLater" class="ri-later">Later</button>
+    </div>
+  </div>
 
   <!-- 1. Gift intro -->
   <section id="intro" class="overlay">
@@ -57,7 +65,7 @@
     <h1 id="introTitle">Someone special sent you a surprise!</h1>
     <p class="sub" id="introSub">Turn your sound on 🔊</p>
     <button id="openBtn" class="big-btn">Open my gift ✨</button>
-    <p class="cam-note">📷 Allow the camera to see it appear in your room</p>
+    <p class="cam-note">🔒 Opens right here. No app, no sign-up, no camera needed.</p>
   </section>
 
   <!-- 2. Lyrics / hints -->
@@ -94,6 +102,7 @@
     </div>
     <button id="primaryBtn" class="big-btn"></button>
     <div class="card-row">
+      <button id="cardRoom" class="pill-btn" hidden>📷 See it in my room</button>
       <button id="selfieBtn" class="pill-btn">🤳 Selfie with it</button>
       <button id="replayBtn" class="pill-btn">🔁 Replay</button>
     </div>
@@ -129,6 +138,6 @@
 
   <div id="toast" class="toast"></div>
   <noscript><p class="noscript">Please enable JavaScript to open your gift.</p></noscript>
-  <script type="module" src="/static/wish/wish.js?v=15"></script>
+  <script type="module" src="/static/wish/wish.js?v=16"></script>
 </body>
 </html>

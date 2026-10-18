@@ -15,7 +15,7 @@ test('names are trimmed, shortened and stripped of markup and control characters
 test('preview title is personal only when both names are present', () => {
   assert.equal(ogTitle('pj', { from: 'Nithy', to: 'Gokul' }), '🪔 Nithy sent you a Pooja gift, Gokul!');
   assert.equal(ogTitle('aw', { from: 'Nithy', to: 'Gokul' }), '🏆 Nithy gives a special award to Gokul! 😂');
-  assert.equal(ogTitle('pj', { from: 'Nithy', to: '' }), '🪔 A Pooja gift is waiting for you!');
+  assert.equal(ogTitle('pj', { from: 'Nithy', to: '' }), '🪔 A special Pooja surprise is waiting for you ✨');
 });
 
 test('rendered page escapes names and keeps them out of the canonical address', () => {

@@ -17,7 +17,7 @@ const pages = {
   '/thanks/': 'special thank-you',
   '/r/': 'special reaction',
   '/award/': 'the award goes to',
-  '/pooja/': 'A Pooja gift is waiting',
+  '/pooja/': 'A special Pooja surprise is waiting',
 };
 for (const [path, title] of Object.entries(pages)) {
   const res = await fetch(BASE + path);

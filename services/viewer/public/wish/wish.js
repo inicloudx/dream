@@ -71,6 +71,11 @@ const WORKS = {
   shop: { emoji: '🛒', label: 'your business' },
   farm: { emoji: '🚜', label: 'your farm' },
   student: { emoji: '📚', label: 'your studies' },
+  bank: { emoji: '🏦', label: 'your bank work' },
+  law: { emoji: '⚖️', label: 'your cases' },
+  doctor: { emoji: '🩺', label: 'your healing hands' },
+  teacher: { emoji: '👩‍🏫', label: 'your classroom' },
+  home: { emoji: '🏠', label: 'your kitchen' },
 };
 // 🏆 Fun awards — the friendly war zone. The trophy holds a funny prop.
 const AWARDS = {
@@ -118,7 +123,7 @@ function readWish() {
       pmode: POOJA_MODES[o.s] ? o.s : 'ay',
       work: WORKS[o.w] ? o.w : 'car',
     };
-    return w.to ? w : null;
+    return w;   // names are optional (quick share sends one link to many people)
   } catch {
     return null;
   }
@@ -670,7 +675,7 @@ const BDAY_SONG = [
 const BDAY_LYRICS = [
   'Happy birthday to you 🎵',
   'Happy birthday to you 🎶',
-  `Happy birthday dear ${W.to} 💖`,
+  W.to ? `Happy birthday dear ${W.to} 💖` : 'Happy birthday to you 💖',
   'Happy birthday to you! 🎉',
 ];
 // Original gentle arpeggio for the thank-you gift.
@@ -690,12 +695,12 @@ const PJ_SONG = [
 ];
 const PJ_LYRICS = [
   `🪔 ${PJ.ta}`,
-  `Happy ${PJ.en}, ${W.to}! 🙏`,
+  W.to ? `Happy ${PJ.en}, ${W.to}! 🙏` : `Happy ${PJ.en}! 🙏`,
   IS_SAR ? 'Wisdom, music and learning 📚🎶' : `${WORK.emoji} Blessings for ${WORK.label}`,
   W.from ? `— ${W.from}` : '',
 ];
-const AW_LYRICS = ['', '', `Congratulations, ${W.to}! 😂👏`, '', 'Speech! Speech! 🎤', ''];
-const TY_LYRICS = ['', '', `Thank you, ${W.to} 💖`, '', ITEM.label ? `for ${ITEM.label} ${ITEM.emoji}` : '', ''];
+const AW_LYRICS = ['', '', `Congratulations, ${W.to || 'superstar'}! 😂👏`, '', 'Speech! Speech! 🎤', ''];
+const TY_LYRICS = ['', '', W.to ? `Thank you, ${W.to} 💖` : 'Thank you 💖', '', ITEM.label ? `for ${ITEM.label} ${ITEM.emoji}` : '', ''];
 
 let songTimers = [];
 
@@ -801,7 +806,7 @@ function buildCake() {
   hero.add(dripRing(1.1, 0.88, 30, 0xfff4e6, 0.07, 0.1));
   hero.add(beadRing(1.1, 0.13, 40, 0xfff4e6, 0.07));
 
-  const bandMat = new THREE.MeshStandardMaterial({ map: bandTexture(W.to), transparent: true, roughness: 0.5, polygonOffset: true, polygonOffsetFactor: -2 });
+  const bandMat = new THREE.MeshStandardMaterial({ map: bandTexture(W.to || 'TO YOU'), transparent: true, roughness: 0.5, polygonOffset: true, polygonOffsetFactor: -2 });
   const band = new THREE.Mesh(new THREE.CylinderGeometry(1.104, 1.104, 0.3, 96, 1, true), bandMat);
   band.position.y = 0.43;
   hero.add(band);
@@ -838,7 +843,7 @@ function buildCake() {
   const topper = new THREE.Group();
   topper.position.set(0, 2.24, -0.32);
   topper.scale.setScalar(1.2);
-  const tex = plaqueTexture('Happy Birthday', W.to, { bg2: '#ffe1ee', line1: '#e64a8b', line2: '#5b1a8a' });
+  const tex = plaqueTexture('Happy Birthday', W.to || 'To You!', { bg2: '#ffe1ee', line1: '#e64a8b', line2: '#5b1a8a' });
   const gold = std(0xe8b64c, 0.3, { metalness: 0.8 });
   topper.add(shadowed(new THREE.Mesh(new THREE.BoxGeometry(1.16, 0.6, 0.02), gold)));
   for (const side of [1, -1]) {
@@ -1416,7 +1421,7 @@ function buildTrophy(propKey) {
   const gold = std(0xffc94a, 0.22, { metalness: 1, side: THREE.DoubleSide });
   g.add(mesh(new THREE.BoxGeometry(0.66, 0.18, 0.66), std(0x3b2314, 0.45), 0, 0.09, 0));
   g.add(mesh(new THREE.BoxGeometry(0.52, 0.12, 0.52), std(0x2a180d, 0.45), 0, 0.24, 0));
-  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 0.16), new THREE.MeshStandardMaterial({ map: plateTexture(W.to), roughness: 0.4, metalness: 0.3 }));
+  const plate = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 0.16), new THREE.MeshStandardMaterial({ map: plateTexture(W.to || 'YOU'), roughness: 0.4, metalness: 0.3 }));
   plate.position.set(0, 0.09, 0.332);
   g.add(plate);
   g.add(mesh(new THREE.CylinderGeometry(0.05, 0.1, 0.26, 20), gold, 0, 0.43, 0));
@@ -1475,6 +1480,7 @@ function buildTitle(word, y, sub = '', maxW = 2.0) {
   };
   // The 3D font only has Latin letters — other scripts (e.g. Tamil) get a glowing name sign.
   const latinName = /^[A-Za-z0-9 .,'&!-]+$/.test(W.to);
+  const hasName = !!W.to;
   const nameSign = () => {
     const [c, ctx] = canvas(1024, 256);
     fitFont(ctx, W.to, 800, 190, 980);
@@ -1496,9 +1502,9 @@ function buildTitle(word, y, sub = '', maxW = 2.0) {
     text3d(font, word, 0.25, sub ? 0.44 : 0.2, maxW);
     if (sub) text3d(font, sub, 0.15, 0.17, 1.2);
     if (latinName) text3d(font, W.to, 0.22, -0.18, 1.9);
-    else nameSign();
+    else if (hasName) nameSign();
   }).catch(() => {
-    const tex = plaqueTexture(sub ? `${word} ${sub}` : word, W.to, { bg2: '#ffe1ee', line1: '#e64a8b', line2: '#c2185b' });
+    const tex = plaqueTexture(sub ? `${word} ${sub}` : word, W.to || '✨', { bg2: '#ffe1ee', line1: '#e64a8b', line2: '#c2185b' });
     textGroup.add(new THREE.Mesh(new THREE.PlaneGeometry(1.5, 0.75), new THREE.MeshStandardMaterial({ map: tex })));
   });
   return textGroup;
@@ -1762,6 +1768,22 @@ function screenTexture(lines) {
   return toTexture(c);
 }
 
+// The teacher's blackboard: chalk letters in English and Tamil.
+function chalkTexture() {
+  const [c, ctx] = canvas(512, 330);
+  ctx.fillStyle = '#1f4d36';
+  ctx.fillRect(0, 0, 512, 330);
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  ctx.fillStyle = 'rgba(255,255,255,0.92)';
+  ctx.font = `800 92px ${FONT}`;
+  ctx.fillText('அ  A  1', 256, 115);
+  fitFont(ctx, PJ.ta, 700, 40, 470);
+  ctx.fillStyle = '#ffeb3b';
+  ctx.fillText(PJ.ta, 256, 240);
+  return toTexture(c);
+}
+
 function keyboardTexture() {
   const [c, ctx] = canvas(256, 112);
   ctx.fillStyle = '#2f3338';
@@ -1960,6 +1982,125 @@ const POOJA_ITEMS = {
     g.add(pen);
     tilak(g, -0.2, 0.2, 0.131);
     garland(g, 0.42, 0.04, 0.22, 0.16);
+    return g;
+  },
+  // Bank: a steel locker with a dial, note bundles and a pile of gold coins.
+  bank() {
+    const g = new THREE.Group();
+    const steel = std(0x78909c, 0.3, { metalness: 0.85 }), gold = std(0xd4a017, 0.25, { metalness: 1 });
+    g.add(mesh(new THREE.BoxGeometry(0.42, 0.48, 0.36), steel, -0.22, 0.24, -0.02));
+    g.add(mesh(new THREE.BoxGeometry(0.36, 0.42, 0.01), std(0x607d8b, 0.35, { metalness: 0.8 }), -0.22, 0.24, 0.165));
+    const dial = mesh(new THREE.CylinderGeometry(0.06, 0.06, 0.03, 24), gold, -0.22, 0.28, 0.18);
+    dial.rotation.x = Math.PI / 2;
+    g.add(dial);
+    g.add(mesh(new THREE.BoxGeometry(0.03, 0.12, 0.03), gold, -0.1, 0.18, 0.18));
+    const note = std(0x7cb342, 0.8), band = std(0xfafafa, 0.7);
+    for (let i = 0; i < 3; i++) {
+      g.add(mesh(new THREE.BoxGeometry(0.3, 0.05, 0.14), note, 0.24, 0.025 + i * 0.052, -0.06 + (i % 2) * 0.02));
+      g.add(mesh(new THREE.BoxGeometry(0.05, 0.052, 0.142), band, 0.24, 0.025 + i * 0.052, -0.06 + (i % 2) * 0.02));
+    }
+    for (let i = 0; i < 9; i++) {
+      const c = mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.01, 18), gold, 0.18 + (i % 3) * 0.06, 0.006 + Math.floor(i / 3) * 0.011, 0.15);
+      g.add(c);
+    }
+    tilak(g, -0.22, 0.4, 0.171);
+    tilak(g, 0.24, 0.16, 0.012, 0, 0.6);
+    garland(g, 0.42, 0.05, 0.47, 0.17);
+    return g;
+  },
+  // Lawyer: the golden scales of justice, a thick law book and a gavel.
+  law() {
+    const g = new THREE.Group();
+    const gold = std(0xd4a017, 0.25, { metalness: 1 }), wood = std(0x5d3a1a, 0.55);
+    g.add(mesh(new THREE.CylinderGeometry(0.1, 0.12, 0.04, 24), gold, -0.18, 0.02, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.62, 12), gold, -0.18, 0.33, 0));
+    g.add(mesh(new THREE.BoxGeometry(0.5, 0.018, 0.018), gold, -0.18, 0.62, 0));
+    g.add(mesh(new THREE.SphereGeometry(0.03, 14, 10), gold, -0.18, 0.66, 0));
+    const pan = [[0, 0], [0.09, 0.006], [0.1, 0.03]].map(([x, y]) => new THREE.Vector2(x, y));
+    for (const sx of [-1, 1]) {
+      for (const dz of [-0.035, 0.035]) g.add(mesh(new THREE.CylinderGeometry(0.002, 0.002, 0.24, 4), gold, -0.18 + sx * 0.24, 0.5, dz));
+      g.add(mesh(new THREE.LatheGeometry(pan, 24), gold, -0.18 + sx * 0.24, 0.37, 0));
+    }
+    g.add(mesh(new THREE.BoxGeometry(0.34, 0.1, 0.26), physical(0x8e1b1b, { roughness: 0.6, clearcoat: 0.2 }), 0.28, 0.05, 0));
+    g.add(mesh(new THREE.BoxGeometry(0.33, 0.085, 0.25), std(0xfaf6ea, 0.9), 0.285, 0.05, 0.004));
+    const gavel = new THREE.Group();
+    gavel.add(mesh(new THREE.CylinderGeometry(0.014, 0.014, 0.3, 10), wood));
+    const head = mesh(new THREE.CylinderGeometry(0.04, 0.04, 0.13, 16), wood, 0, 0.15, 0);
+    head.rotation.z = Math.PI / 2;
+    gavel.add(head);
+    gavel.rotation.set(Math.PI / 2, 0, 0.6);
+    gavel.position.set(0.28, 0.14, 0.02);
+    g.add(gavel);
+    tilak(g, 0.28, 0.06, 0.131);
+    tilak(g, -0.18, 0.18, 0.016, 0, 0.5);
+    garland(g, 0.36, 0.05, 0.1, 0.15);
+    return g;
+  },
+  // Doctor: a stethoscope, a first-aid kit and a small medicine bottle.
+  doctor() {
+    const g = new THREE.Group();
+    g.add(mesh(new THREE.BoxGeometry(0.44, 0.26, 0.26), physical(0xf5f5f5, { roughness: 0.35 }), -0.16, 0.13, -0.02));
+    g.add(mesh(new THREE.BoxGeometry(0.16, 0.035, 0.12), std(0x9e9e9e, 0.4, { metalness: 0.6 }), -0.16, 0.275, -0.02));
+    const red = std(0xd32f2f, 0.4);
+    g.add(mesh(new THREE.BoxGeometry(0.15, 0.045, 0.004), red, -0.16, 0.14, 0.111));
+    g.add(mesh(new THREE.BoxGeometry(0.045, 0.15, 0.004), red, -0.16, 0.14, 0.111));
+    const tube = std(0x263238, 0.45), steel = std(0xcfd8dc, 0.2, { metalness: 0.9 });
+    const loop = mesh(new THREE.TorusGeometry(0.15, 0.012, 10, 40, Math.PI * 1.6), tube, 0.26, 0.015, 0.04);
+    loop.rotation.x = -Math.PI / 2;
+    g.add(loop);
+    const chest = mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.025, 22), steel, 0.38, 0.013, 0.17);
+    g.add(chest);
+    for (const sx of [-1, 1]) g.add(mesh(new THREE.SphereGeometry(0.016, 10, 8), steel, 0.26 + sx * 0.08, 0.016, -0.12));
+    g.add(mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.11, 16), physical(0xff8f00, { transmission: 0.3, roughness: 0.2 }), 0.12, 0.055, -0.14));
+    g.add(mesh(new THREE.CylinderGeometry(0.037, 0.037, 0.03, 16), std(0xfafafa, 0.5), 0.12, 0.125, -0.14));
+    tilak(g, -0.16, 0.22, 0.112);
+    garland(g, 0.44, 0.05, 0.26, 0.13);
+    return g;
+  },
+  // Teacher: a little blackboard on an easel, chalk and a stack of notebooks.
+  teacher() {
+    const g = new THREE.Group();
+    const wood = std(0x8d5524, 0.6);
+    const board = new THREE.Group();
+    board.position.set(-0.12, 0.08, -0.05);
+    board.rotation.x = -0.12;
+    board.add(mesh(new THREE.BoxGeometry(0.62, 0.42, 0.03), wood, 0, 0.26, 0));
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(0.56, 0.36), new THREE.MeshStandardMaterial({ map: chalkTexture(), roughness: 0.9 }));
+    face.position.set(0, 0.26, 0.016);
+    board.add(face);
+    tilak(board, 0, 0.46, 0.016, 0, 0.6);
+    g.add(board);
+    for (const sx of [-1, 1]) g.add(mesh(new THREE.BoxGeometry(0.03, 0.34, 0.03), wood, -0.12 + sx * 0.26, 0.17, -0.03));
+    g.add(mesh(new THREE.BoxGeometry(0.6, 0.02, 0.06), wood, -0.12, 0.09, 0.0));
+    for (const [x, c] of [[-0.3, 0xffffff], [-0.24, 0xffeb3b], [-0.18, 0xf48fb1]]) {
+      const ch = mesh(new THREE.CylinderGeometry(0.008, 0.008, 0.05, 8), std(c, 0.9), x, 0.105, 0.0);
+      ch.rotation.z = Math.PI / 2;
+      g.add(ch);
+    }
+    [0xff7043, 0x42a5f5].forEach((c, i) => {
+      g.add(mesh(new THREE.BoxGeometry(0.24, 0.04, 0.18), physical(c, { roughness: 0.6, clearcoat: 0.2 }), 0.34, 0.02 + i * 0.042, 0.1));
+    });
+    g.add(mesh(new THREE.SphereGeometry(0.05, 18, 14), std(0xd32f2f, 0.35), 0.34, 0.13, 0.1));   // an apple for the teacher
+    garland(g, 0.6, 0.06, 0.52, -0.02);
+    return g;
+  },
+  // Home: the mixie and the pressure cooker — every Tamil kitchen's Ayudha Pooja heroes.
+  home() {
+    const g = new THREE.Group();
+    const white = physical(0xf5f5f5, { roughness: 0.3 }), steel = std(0xcfd8dc, 0.2, { metalness: 0.9 });
+    g.add(mesh(new THREE.BoxGeometry(0.26, 0.18, 0.24), white, -0.2, 0.09, 0));
+    const knob = mesh(new THREE.CylinderGeometry(0.03, 0.03, 0.02, 16), std(0x1565c0, 0.4), -0.2, 0.09, 0.125);
+    knob.rotation.x = Math.PI / 2;
+    g.add(knob);
+    g.add(mesh(new THREE.CylinderGeometry(0.1, 0.08, 0.24, 24), steel, -0.2, 0.3, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.105, 0.105, 0.03, 24), std(0x37474f, 0.5), -0.2, 0.435, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.16, 0.15, 0.22, 28), steel, 0.2, 0.11, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.15, 0.15, 0.025, 28), steel, 0.2, 0.232, 0));
+    g.add(mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.05, 12), std(0x212121, 0.5), 0.2, 0.27, 0));
+    g.add(mesh(new THREE.BoxGeometry(0.26, 0.03, 0.04), std(0x212121, 0.5), 0.4, 0.2, 0));
+    tilak(g, -0.2, 0.3, 0.096);
+    tilak(g, 0.2, 0.12, 0.161);
+    garland(g, 0.3, 0.04, 0.2, 0.17);
     return g;
   },
   // Saraswathi Pooja: her symbols — the veena, books and laptop, a lotus and the white swan.
@@ -2943,12 +3084,13 @@ async function reveal() {
     hero.scale.setScalar(Math.max(0.0001, Math.min(1, k * 3)));
   });
   setTimeout(() => { sfx.thud(); burstConfetti(60, new THREE.Vector3(0, 0.2, 0), 0.7); }, 420);
+  setTimeout(inviteRoom, 4500);
   await wait(1200);
   if (IS_RX) {
     playReaction();
   } else if (IS_PJ) {
     phase = 'open';
-    setHint({ text: `${W.from || 'Your friend'} sent you a Pooja gift 🙏`, main: '🪔 Light the lamp', onMain: lightPooja });
+    setHint({ text: `${W.from || 'Someone special'} sent you a Pooja gift 🙏`, main: '🪔 Light the lamp', onMain: lightPooja });
   } else if (IS_BOX) {
     phase = 'open';
     setHint(IS_AW
@@ -2992,7 +3134,7 @@ async function celebrate() {
   setTimeout(() => { burstConfetti(110, new THREE.Vector3(-1.2, 0.2, 0.6), 1); sfx.pop(); }, 450);
   setTimeout(() => { burstConfetti(110, new THREE.Vector3(1.2, 0.2, 0.6), 1); sfx.pop(); }, 750);
   tween(0.6, (k) => hero.scale.setScalar(1 + Math.sin(k * Math.PI) * 0.08));
-  showLyric(`🎉 Happy Birthday, ${W.to}! 🎉`);
+  showLyric(W.to ? `🎉 Happy Birthday, ${W.to}! 🎉` : '🎉 Happy Birthday! 🎉');
   setTimeout(releaseBalloons, 600);
 
   await wait(2600);
@@ -3002,7 +3144,7 @@ async function celebrate() {
 
 function showCard() {
   phase = 'done';
-  $('cardTo').textContent = `Dear ${W.to},`;
+  $('cardTo').textContent = W.to ? `Dear ${W.to},` : 'Just for you ✨';
   $('cardMsg').textContent = W.msg || (IS_PJ ? `${PJ.ta}! 🙏` : IS_AW ? `You've won the ${AW_TITLE} AWARD! 😂🏆` : IS_RX ? `${REACT.word.charAt(0)}${REACT.word.slice(1).toLowerCase()} ${REACT.emoji}` : IS_TY ? 'Thank you so much! 💖' : 'Happy Birthday! 🎂');
   $('cardFrom').textContent = W.from ? `— with love, ${W.from}` : '';
   $('reactLabel').textContent = W.from ? `React to ${W.from}:` : 'React:';
@@ -3015,6 +3157,7 @@ function showCard() {
     : (W.from ? `💌 Send something back to ${W.from}` : '💌 Send a surprise to someone');
   $('card').classList.remove('min');
   $('card').hidden = false;
+  $('cardRoom').hidden = mode !== '3d';
   arTip('Tap 📸 Photo or 🎥 Video to share it! ✨', 5000);
 }
 
@@ -3086,12 +3229,10 @@ function onTap(x, y) {
 $('openBtn').addEventListener('click', async () => {
   initAudio();
   track('start');
-  const gyro = askGyro();
   $('openBtn').disabled = true;
-  $('introSub').textContent = 'Opening your gift… 📷';
-  const ok = await setMode('room', gyro);
-  track(ok ? 'cam_ok' : 'cam_denied');
-  if (!ok) place3D();
+  // Many people fear a link that asks for the camera straight away, so the gift opens in 3D.
+  // Seeing it in their room is an invitation that comes after the reveal (see inviteRoom).
+  place3D();
   updateTools();
   $('intro').classList.add('fade');
   setTimeout(() => { $('intro').hidden = true; }, 650);
@@ -3107,15 +3248,33 @@ $('mute').addEventListener('click', () => {
 });
 
 document.querySelectorAll('.tool[data-mode]').forEach((b) => {
-  b.addEventListener('click', () => setMode(b.dataset.mode, b.dataset.mode === 'room' ? askGyro() : null));
+  b.addEventListener('click', () => openMode(b.dataset.mode));
 });
+
+// Camera modes only ever start from a tap, with the reason shown first.
+async function openMode(m) {
+  $('roomInvite').hidden = true;
+  const ok = await setMode(m, m === 'room' ? askGyro() : null);
+  if (m !== '3d') track(ok ? 'cam_ok' : 'cam_denied');
+  return ok;
+}
+
+let invited = false;
+function inviteRoom() {
+  if (invited || mode !== '3d') return;
+  invited = true;
+  $('roomInvite').hidden = false;
+}
+$('roomGo').addEventListener('click', () => openMode('room'));
+$('roomLater').addEventListener('click', () => { $('roomInvite').hidden = true; });
 $('recenter').addEventListener('click', recenter);
 $('snapBtn').addEventListener('click', capture);
 $('selfieBtn').addEventListener('click', () => {
   const next = mode === 'selfie' ? 'room' : 'selfie';
-  setMode(next, next === 'room' ? askGyro() : null);
+  openMode(next);
 });
 $('replayBtn').addEventListener('click', replay);
+$('cardRoom').addEventListener('click', async () => { if (await openMode('room')) $('cardRoom').hidden = true; });
 function minimizeCard() { $('card').classList.add('min'); }
 $('cardToggle').addEventListener('click', minimizeCard);
 $('cardShow').addEventListener('click', () => $('card').classList.remove('min'));
@@ -3125,7 +3284,7 @@ $('primaryBtn').addEventListener('click', () => {
   track('send_back');
   const p = new URLSearchParams();
   p.set('k', IS_PJ ? 'pj' : IS_AW ? 'aw' : IS_TY || IS_RX ? 'rx' : 'ty');
-  p.set('f', W.to);                            // the viewer becomes the sender
+  if (W.to) p.set('f', W.to);                  // the viewer becomes the sender
   if (W.from) p.set('t', W.from);
   if (W.id) p.set('r', W.id);
   location.href = `${CREATE_URL}#${p.toString()}`;
@@ -3347,18 +3506,21 @@ function frame() {
 
 // ── Boot ────────────────────────────────────────────────────────
 (async function boot() {
+  const HEY = W.to ? `Hey ${W.to}! ` : '';
   if (IS_PJ) {
     $('introEmoji').textContent = PJ.emoji;
     $('introTitle').textContent = W.demo
       ? 'Preview: this is what they will see 🪔'
-      : `Hey ${W.to}! 🪔 ${W.from || 'Someone'} sent you a Pooja gift!`;
+      : W.to || W.from
+        ? `${HEY}🪔 ${W.from || 'Someone special'} sent you a Pooja gift!`
+        : '✨ Someone special sent you a Pooja surprise!';
     $('introSub').textContent = `${PJ.ta} · Turn your sound on 🔊`;
     $('openBtn').textContent = 'Open my Pooja gift 🪔';
   } else if (IS_AW) {
     $('introEmoji').textContent = '🏆';
     $('introTitle').textContent = W.demo
       ? 'Preview: this is what they will see 🏆'
-      : `Hey ${W.to}! 🏆 ${W.from || 'Your friend'} has an award for you!`;
+      : `${HEY}🏆 ${W.from || 'Your friend'} has an award for you!`;
     $('introSub').textContent = 'Turn your sound on 🔊 (drumroll please…)';
     $('openBtn').textContent = 'Open my award 🏆';
   } else if (IS_RX) {
@@ -3366,20 +3528,20 @@ function frame() {
     $('introTitle').textContent = W.demo
       ? 'Preview: this is what they will see 💞'
       : W.reply
-        ? `Hey ${W.to}! ${W.from || 'Someone'} reacted to your surprise ${REACT.emoji}`
-        : `Hey ${W.to}! ${W.from || 'Someone'} sent you something special ${REACT.emoji}`;
+        ? `${HEY}${W.from || 'Someone'} reacted to your surprise ${REACT.emoji}`
+        : `${HEY}${W.from || 'Someone special'} sent you something special ${REACT.emoji}`;
     $('openBtn').textContent = 'Open it ✨';
   } else if (IS_TY) {
     $('introEmoji').textContent = '💌';
     $('introTitle').textContent = W.demo
       ? 'Preview: this is what they will see 💖'
       : ITEM.label
-        ? `Hey ${W.to}! ${ITEM.emoji} ${W.from || 'Someone'} says thank you for ${ITEM.label}!`
-        : `Hey ${W.to}! 💖 ${W.from || 'Someone'} sent you a thank-you gift!`;
+        ? `${HEY}${ITEM.emoji} ${W.from || 'Someone'} says thank you for ${ITEM.label}!`
+        : `${HEY}💖 ${W.from || 'Someone special'} sent you a thank-you gift!`;
   } else {
     $('introTitle').textContent = W.demo
       ? 'Preview: this is what your friend will see ✨'
-      : `Hey ${W.to}! 🎉 You've got a birthday surprise!`;
+      : `${HEY}🎉 You've got a birthday surprise!`;
   }
   track('open');
   const meParam = new URLSearchParams(location.search).get('me');

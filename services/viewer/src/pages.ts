@@ -58,8 +58,8 @@ const OG: Record<Kind, Og> = {
     named: ({ from, to }) => `🏆 ${from} gives a special award to ${to}! 😂`,
   },
   pj: {
-    title: '🪔 A Pooja gift is waiting for you!',
-    desc: 'Ayudha & Saraswathi Pooja wishes 🙏 Tap to light the lamp in your room · ஆயுத பூஜை & சரஸ்வதி பூஜை வாழ்த்துக்கள்',
+    title: '🪔 A special Pooja surprise is waiting for you ✨',
+    desc: 'Ayudha & Saraswathi Pooja wishes 🙏 Tap to light the lamp · ஆயுத பூஜை & சரஸ்வதி பூஜை வாழ்த்துக்கள்',
     image: 'og_pooja.jpg',
     pageTitle: 'A Pooja gift for you 🪔',
     named: ({ from, to }) => `🪔 ${from} sent you a Pooja gift, ${to}!`,

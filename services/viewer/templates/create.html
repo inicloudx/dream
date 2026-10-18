@@ -15,7 +15,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/wish/wish.css?v=15">
+  <link rel="stylesheet" href="/static/wish/wish.css?v=16">
   <script type="importmap">
   {
     "imports": {
@@ -54,6 +54,12 @@
     .kind.active { background: var(--accent); color: var(--accent-ink); }
     .row { display: flex; gap: 8px; }
     .row .pill-btn { flex: 1; }
+    .namemode { display: flex; gap: 8px; margin-bottom: 4px; }
+    .nm { flex: 1; font: inherit; font-weight: 800; font-size: 0.95rem; color: var(--ink); text-align: left; line-height: 1.2;
+      background: rgba(255, 255, 255, 0.06); border: 1px solid var(--glass-line); border-radius: 16px; padding: 0.6em 0.75em; }
+    .nm small { display: block; font-weight: 500; font-size: 0.74rem; color: var(--muted); margin-top: 2px; }
+    .nm.on { background: rgba(255, 204, 77, 0.16); border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
+    .quick-tip { margin: -2px 0 0; font-size: 0.82rem; color: var(--muted); text-align: center; line-height: 1.35; }
     .err { color: #ffb4b4; font-weight: 700; margin: 10px 0 0; min-height: 1.2em; }
     .note { font-size: 0.8rem; color: var(--muted); text-align: center; margin-top: 18px; line-height: 1.4; }
     .toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); background: #fff; color: #222; font-weight: 700; padding: 0.6em 1.2em; border-radius: 999px; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
@@ -99,11 +105,17 @@
     </header>
 
     <form id="form" class="panel" autocomplete="off" novalidate>
-      <label for="to" id="toLabel">Birthday person’s name</label>
-      <input id="to" maxlength="24" placeholder="e.g. Priya / பிரியா" required>
+      <div class="namemode" role="group" aria-label="Names">
+        <button type="button" id="modeQuick" class="nm">⚡ Quick share<small>No names · one link for everyone</small></button>
+        <button type="button" id="modeNamed" class="nm">✍️ With names<small>Personal, for one person</small></button>
+      </div>
+      <div id="namesWrap">
+        <label for="to" id="toLabel">Birthday person’s name</label>
+        <input id="to" maxlength="24" placeholder="e.g. Priya / பிரியா" required>
 
-      <label for="from">Your name</label>
-      <input id="from" maxlength="24" placeholder="e.g. Karthik">
+        <label for="from">Your name</label>
+        <input id="from" maxlength="24" placeholder="e.g. Karthik">
+      </div>
 
       <div id="pjExtras" hidden>
         <label>Which Pooja?</label>
@@ -144,6 +156,8 @@
 
       <div class="actions">
         <button type="button" id="waBtn" class="big-btn wa">Send on WhatsApp</button>
+        <p class="quick-tip" id="quickTip" hidden>💡 One link works for everyone. Pick 10 chats at once, or post it on your Status.</p>
+        <button type="button" id="shareBtn" class="pill-btn" hidden>📤 Share anywhere (Instagram, Telegram…)</button>
         <div class="row">
           <button type="button" id="previewBtn" class="pill-btn">👀 Preview</button>
           <button type="button" id="copyBtn" class="pill-btn">🔗 Copy link</button>
@@ -151,10 +165,10 @@
       </div>
     </form>
 
-    <p class="note">Free · No app needed · First names show in the WhatsApp preview; your message stays inside the link. We don’t store either.<br>Made with ✨ by <a href="https://inixr.com" style="color:inherit">iNiXR</a></p>
+    <p class="note">Free · No app, no sign-up · Quick share has no names at all. With names, first names show in the WhatsApp preview; your message stays inside the link. We don’t store either.<br>Made with ✨ by <a href="https://inixr.com" style="color:inherit">iNiXR</a></p>
   </main>
   <div class="toast" id="toast">Link copied!</div>
-  <script src="/static/wish/create.js?v=15"></script>
-  <script type="module" src="/static/wish/teaser.js?v=15"></script>
+  <script src="/static/wish/create.js?v=16"></script>
+  <script type="module" src="/static/wish/teaser.js?v=16"></script>
 </body>
 </html>
