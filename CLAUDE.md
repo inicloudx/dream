@@ -61,7 +61,7 @@ New services go in `services/<name>/`, each with its own `package.json` and `Doc
 - Phones cache static files for 30 days: when `wish.js`, `create.js` or `wish.css` change, bump the
   `?v=N` in `services/viewer/templates/view.html` and `create.html`.
 - `?me=1` once per phone stops that phone being counted (handled in the browser).
-- Static file version is currently `?v=16`. `teaser.js` is the 3D gift-opening teaser on the creator page.
+- Static file version is currently `?v=20`. `teaser.js` is the 3D gift-opening teaser on the creator page.
 - Gifts open in 3D with no camera prompt; "See it in your room" is an invitation shown after the reveal (people fear links that ask for the camera). Never start the camera without a tap.
 - Names are optional. "Quick share" (default for Pooja and Love) sends one nameless link to many people; `readWish` must accept empty `to`/`from`, so any new text that uses `W.to` needs a nameless fallback.
 

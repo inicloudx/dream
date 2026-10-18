@@ -36,6 +36,8 @@ assert.ok(named.includes('🪔 Nithy sent you a Pooja gift, Gokul!'), 'named pre
 assert.ok(named.includes('property="og:url" content="') && !/og:url" content="[^"]*Nithy/.test(named), 'names kept out of og:url');
 const award = await (await fetch(`${BASE}/award/?f=Nithy&t=Gokul`)).text();
 assert.ok(award.includes('🏆 Nithy gives a special award to Gokul! 😂'));
+const crowd = await (await fetch(`${BASE}/pooja/?w=doctor`)).text();
+assert.ok(crowd.includes('🩺 A special Pooja surprise for every doctor &amp; nurse ✨'), 'audience preview');
 const sneaky = await (await fetch(`${BASE}/pooja/?f=%3Cb%3EX&t=Y`)).text();
 assert.ok(!sneaky.includes('<b>X'), 'names are escaped');
 step('previews name the sender and receiver from the link, escaped, and keep names out of og:url');

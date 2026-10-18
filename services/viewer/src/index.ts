@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { config } from './config.js';
 import { migrate, pool } from './db.js';
 import { KINDS, parseEvent } from './events.js';
-import { cleanName, renderCreate, renderView, VIEW_PATHS } from './pages.js';
+import { cleanAudience, cleanName, renderCreate, renderView, VIEW_PATHS } from './pages.js';
 import { renderStats } from './stats.js';
 
 // trustProxy: Azure terminates HTTPS in front of the container and forwards the original scheme and host.
@@ -52,14 +52,14 @@ app.get('/favicon.ico', (_req, reply) => reply.sendFile('favicon.ico'));
 const baseUrl = (req: FastifyRequest) => `${req.protocol}://${req.host}`;
 
 for (const kind of KINDS) {
-  app.get<{ Querystring: { f?: string; t?: string } }>(VIEW_PATHS[kind], (req, reply) => {
+  app.get<{ Querystring: { f?: string; t?: string; w?: string } }>(VIEW_PATHS[kind], (req, reply) => {
     const names = { from: cleanName(req.query.f), to: cleanName(req.query.t) };
     return reply
       .header('Cache-Control', 'no-cache')
       // Keep the names out of other sites' logs too when someone follows a link from this page.
       .header('Referrer-Policy', 'origin')
       .type('text/html; charset=utf-8')
-      .send(renderView(kind, baseUrl(req), names));
+      .send(renderView(kind, baseUrl(req), names, cleanAudience(req.query.w)));
   });
 }
 app.get('/create/', (req, reply) =>

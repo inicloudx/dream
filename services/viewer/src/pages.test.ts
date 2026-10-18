@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
-import { cleanName, ogTitle, renderView } from './pages.js';
+import { cleanAudience, cleanName, ogTitle, renderView } from './pages.js';
 
 test('names are trimmed, shortened and stripped of markup and control characters', () => {
   assert.equal(cleanName('  Nithy  '), 'Nithy');
@@ -22,4 +22,13 @@ test('rendered page escapes names and keeps them out of the canonical address', 
   const html = renderView('pj', 'https://dream.example', { from: 'A"B', to: 'Gokul' });
   assert.ok(html.includes('content="🪔 A&quot;B sent you a Pooja gift, Gokul!"'));
   assert.ok(html.includes('property="og:url" content="https://dream.example/pooja/"'));
+});
+
+test('quick Pooja links name the audience, never a person, and ignore unknown keys', () => {
+  assert.equal(ogTitle('pj', { from: '', to: '' }, 'doctor'), '🩺 A special Pooja surprise for every doctor & nurse ✨');
+  assert.equal(ogTitle('pj', { from: 'Nithy', to: 'Gokul' }, 'doctor'), '🪔 Nithy sent you a Pooja gift, Gokul!');
+  assert.equal(ogTitle('bday', { from: '', to: '' }, 'doctor'), '🎁 A birthday surprise is waiting for you!');
+  assert.equal(cleanAudience('law'), 'law');
+  assert.equal(cleanAudience('toString'), '');
+  assert.equal(cleanAudience('<b>'), '');
 });

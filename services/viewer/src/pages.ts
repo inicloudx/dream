@@ -66,9 +66,27 @@ const OG: Record<Kind, Og> = {
   },
 };
 
-/** The WhatsApp preview title: personal when both names are present, generic otherwise. */
-export function ogTitle(kind: Kind, names: Names): string {
-  return names.from && names.to ? OG[kind].named(names) : OG[kind].title;
+// Quick-share Pooja links say who the gift is for (?w=doctor), never a person's name.
+const POOJA_AUDIENCE: Record<string, string> = {
+  car: '🚗 every Road King', tools: '🔧 every skilled hand', it: '💻 every IT warrior', factory: '⚙️ every machine master',
+  shop: '🛒 every business owner', farm: '🌾 every farmer', student: '📚 every student', bank: '🏦 every banker',
+  law: '⚖️ every lawyer', doctor: '🩺 every doctor & nurse', teacher: '👩‍🏫 every teacher', home: '🏠 the home hero',
+  sar: '📚 everyone who loves learning',
+};
+
+/** Only known audience keys are used; anything else is ignored. */
+export function cleanAudience(value: unknown): string {
+  return typeof value === 'string' && Object.hasOwn(POOJA_AUDIENCE, value) ? value : '';
+}
+
+/** The WhatsApp preview title: personal when both names are present, by audience for quick Pooja links, generic otherwise. */
+export function ogTitle(kind: Kind, names: Names, audience = ''): string {
+  if (names.from && names.to) return OG[kind].named(names);
+  if (kind === 'pj' && audience) {
+    const [emoji, ...who] = POOJA_AUDIENCE[audience].split(' ');
+    return `${emoji} A special Pooja surprise for ${who.join(' ')} ✨`;
+  }
+  return OG[kind].title;
 }
 
 const ESCAPES: Record<string, string> = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -78,11 +96,11 @@ function fill(template: string, values: Record<string, string>): string {
   return template.replace(/\{\{\s*([a-z_]+)\s*\}\}/g, (_, key: string) => escapeHtml(values[key] ?? ''));
 }
 
-function context(kind: Kind, base: string, path: string, names: Names): Record<string, string> {
+function context(kind: Kind, base: string, path: string, names: Names, audience = ''): Record<string, string> {
   const og = OG[kind];
   return {
     kind,
-    og_title: ogTitle(kind, names),
+    og_title: ogTitle(kind, names, audience),
     og_desc: og.desc,
     page_title: og.pageTitle,
     og_image: `${base}/static/wish/${og.image}`,
@@ -98,6 +116,6 @@ function context(kind: Kind, base: string, path: string, names: Names): Record<s
 
 const NO_NAMES: Names = { from: '', to: '' };
 
-export const renderView = (kind: Kind, base: string, names: Names = NO_NAMES) =>
-  fill(VIEW, context(kind, base, VIEW_PATHS[kind], names));
+export const renderView = (kind: Kind, base: string, names: Names = NO_NAMES, audience = '') =>
+  fill(VIEW, context(kind, base, VIEW_PATHS[kind], names, audience));
 export const renderCreate = (base: string) => fill(CREATE, context('pj', base, '/create/', NO_NAMES));

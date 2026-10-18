@@ -123,16 +123,18 @@ button { font-family: inherit; cursor: pointer; border: 0; }
 /* "See it in your room": an invitation after the reveal, never a surprise camera prompt. */
 .room-invite {
   position: fixed; left: 16px; right: 78px; top: calc(max(12px, env(safe-area-inset-top)) + 56px); z-index: 17;
-  max-width: 340px; padding: 12px 14px; border-radius: 18px;
+  max-width: 360px; padding: 8px 8px 8px 12px; border-radius: 16px; display: flex; align-items: center; gap: 6px;
   background: rgba(20, 8, 32, 0.78); border: 1px solid rgba(255, 255, 255, 0.22); backdrop-filter: blur(10px);
   animation: riIn 0.45s ease-out;
 }
 @keyframes riIn { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: none; } }
-.ri-title { margin: 0; font-weight: 800; font-size: 1rem; }
-.ri-sub { margin: 4px 0 10px; font-size: 0.8rem; color: var(--muted); line-height: 1.35; }
-.ri-row { display: flex; gap: 8px; }
-.ri-go { flex: 1; font: inherit; font-weight: 800; font-size: 0.92rem; border: 0; border-radius: 999px; padding: 0.55em 0.9em; background: var(--accent); color: var(--accent-ink); }
-.ri-later { font: inherit; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255, 255, 255, 0.25); border-radius: 999px; padding: 0.55em 0.9em; background: none; color: var(--ink); }
+.room-invite[hidden] { display: none; }
+.room-pill { flex-basis: 100%; border-color: var(--accent) !important; color: var(--accent) !important; }
+.room-pill small { font-weight: 500; opacity: 0.8; }
+.ri-text { flex: 1; margin: 0; font-size: 0.88rem; line-height: 1.2; }
+.ri-text small { display: block; font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+.ri-go { white-space: nowrap; font: inherit; font-weight: 800; font-size: 0.92rem; border: 0; border-radius: 999px; padding: 0.55em 0.9em; background: var(--accent); color: var(--accent-ink); }
+.ri-later { font: inherit; font-weight: 700; font-size: 0.85rem; border: 0; border-radius: 999px; padding: 0.4em 0.55em; background: none; color: var(--muted); }
 
 .flash { position: fixed; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 40; transition: opacity 0.35s ease; }
 .flash.on { opacity: 0.75; transition: none; }

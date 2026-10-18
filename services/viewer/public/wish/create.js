@@ -198,7 +198,7 @@
   // 🪔 Pooja (must match POOJA_MODES and WORKS in wish.js).
   var POOJA_MODES = [
     { key: 'ay', chip: '🔧 Ayudha Pooja' },
-    { key: 'sar', chip: '📚 Saraswathi Pooja', msgs: [
+    { key: 'sar', crowd: 'everyone who loves learning 📚', chip: '📚 Saraswathi Pooja', msgs: [
       ['English', 'Happy Saraswathi Pooja! 📚 May Goddess Saraswathi bless you with wisdom and success 🙏'],
       ['தமிழ்', 'சரஸ்வதி பூஜை நல்வாழ்த்துக்கள்! 📚 கல்வியும் ஞானமும் பெருகட்டும் 🙏'],
       ['Tanglish', 'Saraswathi Pooja wishes! 📚 Books, laptop ellam pooja-la vachaachu 😄🙏'],
@@ -206,62 +206,62 @@
     ] },
   ];
   var WORKS = [
-    { key: 'car', chip: '🚗 Car / Bike', msgs: [
+    { key: 'car', crowd: 'everyone who keeps the wheels rolling 🚗', chip: '🚗 Car / Bike', msgs: [
       ['English', 'Happy Ayudha Pooja! 🚗 May your wheels roll safely and every journey be blessed 🙏'],
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🚗 உங்கள் பயணங்கள் எல்லாம் பாதுகாப்பாக அமையட்டும் 🙏'],
       ['Tanglish', 'Ayudha Pooja wishes! 🚗 Vandi wash pannita? Lemon ready ah? 😄🙏'],
     ] },
-    { key: 'tools', chip: '🔧 Workshop / Tools', msgs: [
+    { key: 'tools', crowd: 'every skilled hand in the workshop 🔧', chip: '🔧 Workshop / Tools', msgs: [
       ['English', 'Happy Ayudha Pooja! 🔧 May your tools work hard and your hands stay blessed 🙏'],
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🔧 உழைப்பு எல்லாம் உயர்வு தரட்டும் 🙏'],
       ['Tanglish', 'Ayudha Pooja wishes! 🔧 Indha varusham ellam velai super-a nadakkattum 💪'],
     ] },
-    { key: 'it', chip: '💻 IT / Office', msgs: [
+    { key: 'it', crowd: 'every IT warrior fighting bugs 💻', chip: '💻 IT / Office', msgs: [
       ['English', 'Happy Ayudha Pooja! 💻 May your code compile first time and your bugs stay away 🙏'],
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 💻 வேலையில் வெற்றி மேல் வெற்றி கிடைக்கட்டும் 🙏'],
       ['Tanglish', 'Laptop-ku sandhanam kumkumam vachaachu! 💻 Indha varusham zero bugs 😄🙏'],
     ] },
-    { key: 'factory', chip: '⚙️ Factory / Machines', msgs: [
+    { key: 'factory', crowd: 'everyone who keeps the machines running ⚙️', chip: '⚙️ Factory / Machines', msgs: [
       ['English', 'Happy Ayudha Pooja! ⚙️ May the machines run smooth and production keep growing 🙏'],
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! ⚙️ தொழில் மேன்மேலும் வளரட்டும் 🙏'],
       ['Tanglish', 'Machine-ku pooja mudinjiduchu! ⚙️ Production double aagattum 😄'],
     ] },
-    { key: 'shop', chip: '🛒 Shop / Business', msgs: [
+    { key: 'shop', crowd: 'every business owner building dreams 🛒', chip: '🛒 Shop / Business', msgs: [
       ['English', 'Happy Ayudha Pooja! 🛒 May your business grow and your cash box overflow 🙏'],
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🛒 வியாபாரம் செழிக்கட்டும் 🙏'],
       ['Tanglish', 'Kadai la kallapetti full aagattum! 🛒💰 Ayudha Pooja wishes!'],
     ] },
-    { key: 'farm', chip: '🚜 Farming', msgs: [
+    { key: 'farm', crowd: 'every farmer who feeds us all 🌾', chip: '🚜 Farming', msgs: [
       ['English', 'Happy Ayudha Pooja! 🌾 May the fields stay green and the harvest be rich 🙏'],
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🌾 விளைச்சல் பெருகட்டும் 🙏'],
       ['Tanglish', 'Indha varusham vivasayam semma-va irukkattum! 🌾🚜'],
     ] },
-    { key: 'bank', chip: '🏦 Banking', msgs: [
+    { key: 'bank', crowd: 'every banker who keeps our money safe 🏦', chip: '🏦 Banking', msgs: [
       ['English', 'Happy Ayudha Pooja! 🏦 May every account balance and every audit pass smoothly 🙏'],
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🏦 செல்வமும் வளமும் பெருகட்டும் 🙏'],
       ['Tanglish', 'Cash counter-ku pooja pannachu! 🏦 Indha varusham balance always tally 😄🙏'],
     ] },
-    { key: 'law', chip: '⚖️ Lawyer', msgs: [
+    { key: 'law', crowd: 'every lawyer standing up for justice ⚖️', chip: '⚖️ Lawyer', msgs: [
       ['English', 'Happy Ayudha Pooja! ⚖️ May every case go your way and justice always win 🙏'],
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! ⚖️ நீதியும் வெற்றியும் உங்கள் பக்கம் 🙏'],
       ['Tanglish', 'Objection overruled! ⚖️ Indha varusham ellam case-um win thaan 😄🙏'],
     ] },
-    { key: 'doctor', chip: '🩺 Doctor / Nurse', msgs: [
+    { key: 'doctor', crowd: 'every doctor & nurse who heals us 🩺', chip: '🩺 Doctor / Nurse', msgs: [
       ['English', 'Happy Ayudha Pooja! 🩺 Blessings to the hands that heal everyone 🙏'],
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🩺 உங்கள் கைகள் எல்லோருக்கும் நலம் தரட்டும் 🙏'],
       ['Tanglish', 'Stethoscope-ku sandhanam kumkumam! 🩺 Ellarum healthy-a irukkattum 😄🙏'],
     ] },
-    { key: 'teacher', chip: '👩‍🏫 Teacher', msgs: [
+    { key: 'teacher', crowd: 'every teacher who lights up young minds 👩‍🏫', chip: '👩‍🏫 Teacher', msgs: [
       ['English', 'Happy Pooja! 👩‍🏫 Thank you for lighting up young minds every day 🙏'],
       ['தமிழ்', 'பூஜை வாழ்த்துக்கள்! 👩‍🏫 அறிவு விளக்கை ஏற்றும் ஆசிரியருக்கு வணக்கம் 🙏'],
       ['Tanglish', 'Chalk-ku, board-ku, red pen-ku ellam pooja! 👩‍🏫 Students ellam pass aagattum 😄'],
     ] },
-    { key: 'home', chip: '🏠 Home / Kitchen', msgs: [
+    { key: 'home', crowd: 'the real hero who runs the home 🏠', chip: '🏠 Home / Kitchen', msgs: [
       ['English', 'Happy Ayudha Pooja! 🏠 To the mixie, the cooker and the real hero who runs the home 🙏'],
       ['தமிழ்', 'ஆயுத பூஜை வாழ்த்துக்கள்! 🏠 வீட்டில் எப்போதும் மகிழ்ச்சி நிறையட்டும் 🙏'],
       ['Tanglish', 'Mixie-kum cooker-kum pooja mudinjiduchu! 🏠 Innaiku samayal leave thaan 😄'],
     ] },
-    { key: 'student', chip: '📚 Student', msgs: [
+    { key: 'student', crowd: 'every student chasing big dreams 📚', chip: '📚 Student', msgs: [
       ['English', 'Happy Pooja! 📚 May every exam be easy and every answer right 🙏'],
       ['தமிழ்', 'சரஸ்வதி பூஜை வாழ்த்துக்கள்! 📚 கல்வியில் சிறந்து விளங்க வாழ்த்துக்கள் 🙏'],
       ['Tanglish', 'Books-ku pooja pannita, ini exam easy thaan 😄📚'],
@@ -272,7 +272,8 @@
   var QUICK_TEXT = {
     pj: function (url) {
       var greet = pjMode.key === 'sar' ? '📚 சரஸ்வதி பூஜை வாழ்த்துக்கள்! ' : '🪔 ஆயுத பூஜை வாழ்த்துக்கள்! ';
-      return greet + 'I hid a little Pooja surprise for you inside this link ✨ Tap to light the lamp 👉 ' + url;
+      var crowd = pjMode.key === 'sar' ? pjMode.crowd : pjWork.crowd;
+      return greet + 'To ' + crowd + ' — I hid a little Pooja surprise for you inside this link ✨ Tap to light the lamp 👉 ' + url;
     },
     bday: function (url) { return '🎂 A birthday surprise is hiding in this link… just for you! Tap to open 👉 ' + url; },
     rx: function (url) { return react.emoji + ' Someone ' + react.verb + '! Tap to see it pop up in 3D 👉 ' + url; },
@@ -492,7 +493,8 @@
       data.s = pjMode.key;
       if (pjMode.key === 'ay') data.w = pjWork.key;
     }
-    return { to: to, from: from, quick: q, url: VIEW_URL[kind] + namesQuery(from, to) + '#d=' + b64url(JSON.stringify(data)) };
+    var query = q && kind === 'pj' ? '?w=' + (pjMode.key === 'sar' ? 'sar' : pjWork.key) : namesQuery(from, to);
+    return { to: to, from: from, quick: q, url: VIEW_URL[kind] + query + '#d=' + b64url(JSON.stringify(data)) };
   }
 
   // Short first names for the WhatsApp preview ("Nithy sent you a Pooja gift, Gokul!").

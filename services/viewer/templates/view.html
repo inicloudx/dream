@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Baloo+Thambi+2:wght@500;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="/static/wish/wish.css?v=16">
+  <link rel="stylesheet" href="/static/wish/wish.css?v=20">
   <script type="importmap">
   {
     "imports": {
@@ -51,12 +51,9 @@
   </nav>
   <p id="arTip" class="ar-tip" hidden></p>
   <div id="roomInvite" class="room-invite" role="dialog" aria-label="See it in your room" hidden>
-    <p class="ri-title">✨ Want it in your room?</p>
-    <p class="ri-sub">Uses your camera live, only on this phone. Nothing is recorded or sent.</p>
-    <div class="ri-row">
-      <button id="roomGo" class="ri-go">📷 Yes, show me</button>
-      <button id="roomLater" class="ri-later">Later</button>
-    </div>
+    <p class="ri-text"><b>✨ See it in your room?</b><small>Live camera, only on this phone. Nothing is recorded.</small></p>
+    <button id="roomGo" class="ri-go">📷 Yes</button>
+    <button id="roomLater" class="ri-later" aria-label="Not now">✕</button>
   </div>
 
   <!-- 1. Gift intro -->
@@ -102,7 +99,7 @@
     </div>
     <button id="primaryBtn" class="big-btn"></button>
     <div class="card-row">
-      <button id="cardRoom" class="pill-btn" hidden>📷 See it in my room</button>
+      <button id="cardRoom" class="pill-btn room-pill" hidden>📷 See it in my room <small>· nothing recorded</small></button>
       <button id="selfieBtn" class="pill-btn">🤳 Selfie with it</button>
       <button id="replayBtn" class="pill-btn">🔁 Replay</button>
     </div>
@@ -138,6 +135,6 @@
 
   <div id="toast" class="toast"></div>
   <noscript><p class="noscript">Please enable JavaScript to open your gift.</p></noscript>
-  <script type="module" src="/static/wish/wish.js?v=16"></script>
+  <script type="module" src="/static/wish/wish.js?v=20"></script>
 </body>
 </html>
